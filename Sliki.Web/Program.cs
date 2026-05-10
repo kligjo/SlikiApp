@@ -2,8 +2,10 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.Net.Http.Headers;
 using Sliki.Web.Components;
+using Sliki.Web.Models;
 using Sliki.Web.Options;
 using Sliki.Web.Services;
+using Sliki.Web.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,5 +71,70 @@ app.MapGet(
                 entityTag: EntityTagHeaderValue.Parse(image.ETag),
                 enableRangeProcessing: true);
     });
+
+app.MapPost(
+        "/api/images/upload",
+        async Task<IResult> (
+            HttpRequest request,
+            IImageStorageService imageStorageService,
+            ImageFileValidator imageFileValidator,
+            CancellationToken cancellationToken) =>
+        {
+            var form = await request.ReadFormAsync(cancellationToken);
+            var file = form.Files["file"] ?? form.Files.FirstOrDefault();
+
+            if (file is null)
+            {
+                return Results.BadRequest(new { error = "Select an image file to upload." });
+            }
+
+            if (file.Length <= 0)
+            {
+                return Results.BadRequest(new { error = "The selected file is empty." });
+            }
+
+            if (file.Length > imageFileValidator.MaxUploadBytes)
+            {
+                return Results.BadRequest(new
+                {
+                    error = $"The file exceeds the limit of {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)}."
+                });
+            }
+
+            await using var uploadedFileStream = file.OpenReadStream();
+            await using var memoryStream = new MemoryStream(capacity: file.Length > int.MaxValue ? int.MaxValue : (int)file.Length);
+            await uploadedFileStream.CopyToAsync(memoryStream, cancellationToken);
+            memoryStream.Position = 0;
+
+            byte[] headerBytes;
+            if (memoryStream.TryGetBuffer(out var buffer))
+            {
+                headerBytes = buffer.AsSpan(0, (int)Math.Min(memoryStream.Length, 32)).ToArray();
+            }
+            else
+            {
+                var bytes = memoryStream.ToArray();
+                headerBytes = bytes.AsSpan(0, Math.Min(bytes.Length, 32)).ToArray();
+            }
+
+            var validation = imageFileValidator.Validate(file.FileName, file.ContentType, file.Length, headerBytes);
+            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
+            {
+                return Results.BadRequest(new { error = validation.ErrorMessage ?? "The image failed validation." });
+            }
+
+            memoryStream.Position = 0;
+            var result = await imageStorageService.UploadAsync(
+                new UploadImageRequest(
+                    file.FileName,
+                    validation.NormalizedContentType,
+                    file.Length,
+                    memoryStream),
+                progress: null,
+                cancellationToken);
+
+            return Results.Ok(result);
+        })
+    .DisableAntiforgery();
 
 app.Run();

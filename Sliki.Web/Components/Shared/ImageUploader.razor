@@ -1,9 +1,17 @@
+@implements IAsyncDisposable
 @inject IImageStorageService ImageStorageService
 @inject ImageFileValidator ImageFileValidator
+@inject ILogger<ImageUploader> Logger
+@inject IJSRuntime JSRuntime
 
 @if (!string.IsNullOrWhiteSpace(StatusMessage))
 {
     <div class="alert alert-success" role="status">@StatusMessage</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(SelectionMessage))
+{
+    <div class="alert alert-warning" role="status">@SelectionMessage</div>
 }
 
 <section class="surface-card">
@@ -31,7 +39,7 @@
         <button type="button" class="btn btn-outline-secondary" @onclick="RetryFailedAsync" disabled="@(!HasFailedItems)">
             Retry failed
         </button>
-        <button type="button" class="btn btn-link" @onclick="ClearSelection" disabled="@(!SelectedItems.Any() || IsUploading)">
+        <button type="button" class="btn btn-link" @onclick="ClearSelectionAsync" disabled="@(!SelectedItems.Any() || IsUploading)">
             Clear selection
         </button>
     </div>
@@ -96,15 +104,17 @@ else
 }
 
 @code {
+    private const string FileInputId = "image-upload-input";
     private const int MaxSelectedFiles = 100;
-    private const int PreviewDimension = 240;
-    private const long MaxPreviewBytes = 1_000_000;
 
     private readonly List<SelectedUploadItem> SelectedItems = [];
+    private IJSObjectReference? _module;
 
     private bool IsUploading { get; set; }
 
     private string? StatusMessage { get; set; }
+
+    private string? SelectionMessage { get; set; }
 
     private long MaxUploadBytes => ImageFileValidator.MaxUploadBytes;
 
@@ -115,27 +125,61 @@ else
 
     private async Task HandleFilesSelectedAsync(InputFileChangeEventArgs args)
     {
-        StatusMessage = null;
-
-        foreach (var file in args.GetMultipleFiles(MaxSelectedFiles))
+        try
         {
-            var item = new SelectedUploadItem
-            {
-                File = file,
-                DisplayName = FileNameSanitizer.SanitizeDisplayName(file.Name),
-                BrowserContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "unknown" : file.ContentType,
-                SizeInBytes = file.Size,
-                PreviewDataUrl = await CreatePreviewDataUrlAsync(file)
-            };
+            StatusMessage = null;
+            SelectionMessage = null;
 
-            if (file.Size > MaxUploadBytes)
+            if (args.FileCount == 0)
             {
-                item.State = UploadState.Failed;
-                item.StatusDetails = "File rejected before upload.";
-                item.ErrorMessage = $"The file exceeds the limit of {FileSizeFormatter.Format(MaxUploadBytes)}.";
+                return;
             }
 
-            SelectedItems.Add(item);
+            IReadOnlyList<IBrowserFile> files;
+
+            try
+            {
+                files = args.GetMultipleFiles(MaxSelectedFiles);
+            }
+            catch (InvalidOperationException)
+            {
+                SelectionMessage = $"Select up to {MaxSelectedFiles} images at a time.";
+                return;
+            }
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    var item = new SelectedUploadItem
+                    {
+                        File = file,
+                        DisplayName = FileNameSanitizer.SanitizeDisplayName(file.Name),
+                        BrowserContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "unknown" : file.ContentType,
+                        SizeInBytes = file.Size
+                    };
+
+                    if (file.Size > MaxUploadBytes)
+                    {
+                        item.State = UploadState.Failed;
+                        item.StatusDetails = "File rejected before upload.";
+                        item.ErrorMessage = $"The file exceeds the limit of {FileSizeFormatter.Format(MaxUploadBytes)}.";
+                    }
+
+                    SelectedItems.Add(item);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    SelectionMessage = ex.Message;
+                }
+            }
+
+            await PopulatePreviewUrlsAsync(files.Count);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed while processing selected files.");
+            SelectionMessage = $"The selected files could not be processed: {ex.Message}";
         }
     }
 
@@ -306,32 +350,72 @@ else
         return bytes.AsSpan(0, Math.Min(bytes.Length, 32)).ToArray();
     }
 
-    private async Task<string?> CreatePreviewDataUrlAsync(IBrowserFile file)
+    private async Task PopulatePreviewUrlsAsync(int selectedFileCount)
     {
         try
         {
-            var previewFile = await file.RequestImageFileAsync(file.ContentType, PreviewDimension, PreviewDimension);
-            await using var previewStream = previewFile.OpenReadStream(MaxPreviewBytes);
-            using var memoryStream = new MemoryStream();
-            await previewStream.CopyToAsync(memoryStream);
-            var base64 = Convert.ToBase64String(memoryStream.ToArray());
-            return $"data:{previewFile.ContentType};base64,{base64}";
+            var module = await GetModuleAsync();
+            var previewUrls = await module.InvokeAsync<string[]>("getImagePreviewUrls", FileInputId);
+            var itemsToUpdate = SelectedItems.TakeLast(selectedFileCount).ToList();
+
+            for (var index = 0; index < itemsToUpdate.Count && index < previewUrls.Length; index++)
+            {
+                itemsToUpdate[index].PreviewDataUrl = previewUrls[index];
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            Logger.LogWarning(ex, "Image previews could not be generated in the browser.");
         }
     }
 
-    private void ClearSelection()
+    private async Task ClearSelectionAsync()
     {
         if (IsUploading)
         {
             return;
         }
 
+        await RevokePreviewUrlsAsync();
         SelectedItems.Clear();
         StatusMessage = null;
+        SelectionMessage = null;
+    }
+
+    private async Task<IJSObjectReference> GetModuleAsync()
+    {
+        _module ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageUploader.js");
+        return _module;
+    }
+
+    private async Task RevokePreviewUrlsAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.InvokeVoidAsync("revokeImagePreviewUrls");
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await RevokePreviewUrlsAsync();
+
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
     }
 
     private bool CanUploadItem(SelectedUploadItem item) =>
@@ -375,7 +459,7 @@ else
 
         public required long SizeInBytes { get; init; }
 
-        public string? PreviewDataUrl { get; init; }
+        public string? PreviewDataUrl { get; set; }
 
         public UploadState State { get; set; }
 
