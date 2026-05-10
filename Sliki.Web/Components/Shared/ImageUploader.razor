@@ -1,0 +1,390 @@
+@inject IImageStorageService ImageStorageService
+@inject ImageFileValidator ImageFileValidator
+
+@if (!string.IsNullOrWhiteSpace(StatusMessage))
+{
+    <div class="alert alert-success" role="status">@StatusMessage</div>
+}
+
+<section class="surface-card">
+    <div class="section-header">
+        <div>
+            <h2>Choose images</h2>
+            <p class="section-copy">
+                Accepted formats: JPEG, PNG, GIF, WebP, BMP. Maximum file size:
+                <strong>@FileSizeFormatter.Format(MaxUploadBytes)</strong> per image.
+            </p>
+        </div>
+    </div>
+
+    <label class="form-label fw-semibold" for="image-upload-input">Browse for images</label>
+    <InputFile id="image-upload-input"
+               class="form-control"
+               multiple
+               accept="@ImageFileValidator.AcceptAttributeValue"
+               OnChange="HandleFilesSelectedAsync" />
+
+    <div class="upload-actions">
+        <button type="button" class="btn btn-primary" @onclick="UploadAllAsync" disabled="@(!CanUploadAny)">
+            Upload all
+        </button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="RetryFailedAsync" disabled="@(!HasFailedItems)">
+            Retry failed
+        </button>
+        <button type="button" class="btn btn-link" @onclick="ClearSelection" disabled="@(!SelectedItems.Any() || IsUploading)">
+            Clear selection
+        </button>
+    </div>
+</section>
+
+@if (!SelectedItems.Any())
+{
+    <section class="surface-card empty-state" aria-live="polite">
+        <h2>No files selected yet</h2>
+        <p>Use the file picker above to add one or more images for upload.</p>
+    </section>
+}
+else
+{
+    <section class="upload-list" aria-live="polite">
+        @foreach (var item in SelectedItems)
+        {
+            <article class="surface-card upload-item" @key="item.Id">
+                <div class="preview-frame">
+                    @if (!string.IsNullOrWhiteSpace(item.PreviewDataUrl))
+                    {
+                        <img src="@item.PreviewDataUrl" alt="" class="preview-image" />
+                    }
+                    else
+                    {
+                        <div class="preview-placeholder" aria-hidden="true">IMG</div>
+                    }
+                </div>
+
+                <div class="upload-item-main">
+                    <div class="upload-item-header">
+                        <div>
+                            <h3>@item.DisplayName</h3>
+                            <p class="subtle-copy">@FileSizeFormatter.Format(item.SizeInBytes) • @item.BrowserContentType</p>
+                        </div>
+                        <span class="@GetStatusBadgeClass(item.State)">@GetStatusLabel(item.State)</span>
+                    </div>
+
+                    <div class="progress" role="progressbar" aria-label="Upload progress" aria-valuenow="@item.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="@($"width:{item.ProgressPercent}%")">@item.ProgressPercent%</div>
+                    </div>
+
+                    <p class="status-copy">@item.StatusDetails</p>
+
+                    @if (!string.IsNullOrWhiteSpace(item.ErrorMessage))
+                    {
+                        <p class="text-danger mb-0">@item.ErrorMessage</p>
+                    }
+                </div>
+
+                <div class="upload-item-actions">
+                    <button type="button"
+                            class="btn btn-outline-primary"
+                            @onclick="() => UploadItemAsync(item)"
+                            disabled="@(!CanUploadItem(item))">
+                        @(item.State == UploadState.Failed ? "Retry" : "Upload")
+                    </button>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private const int MaxSelectedFiles = 100;
+    private const int PreviewDimension = 240;
+    private const long MaxPreviewBytes = 1_000_000;
+
+    private readonly List<SelectedUploadItem> SelectedItems = [];
+
+    private bool IsUploading { get; set; }
+
+    private string? StatusMessage { get; set; }
+
+    private long MaxUploadBytes => ImageFileValidator.MaxUploadBytes;
+
+    private bool CanUploadAny =>
+        !IsUploading && SelectedItems.Any(item => item.State is UploadState.Pending or UploadState.Failed);
+
+    private bool HasFailedItems => !IsUploading && SelectedItems.Any(item => item.State == UploadState.Failed);
+
+    private async Task HandleFilesSelectedAsync(InputFileChangeEventArgs args)
+    {
+        StatusMessage = null;
+
+        foreach (var file in args.GetMultipleFiles(MaxSelectedFiles))
+        {
+            var item = new SelectedUploadItem
+            {
+                File = file,
+                DisplayName = FileNameSanitizer.SanitizeDisplayName(file.Name),
+                BrowserContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "unknown" : file.ContentType,
+                SizeInBytes = file.Size,
+                PreviewDataUrl = await CreatePreviewDataUrlAsync(file)
+            };
+
+            if (file.Size > MaxUploadBytes)
+            {
+                item.State = UploadState.Failed;
+                item.StatusDetails = "File rejected before upload.";
+                item.ErrorMessage = $"The file exceeds the limit of {FileSizeFormatter.Format(MaxUploadBytes)}.";
+            }
+
+            SelectedItems.Add(item);
+        }
+    }
+
+    private async Task UploadAllAsync()
+    {
+        if (IsUploading)
+        {
+            return;
+        }
+
+        IsUploading = true;
+        StatusMessage = null;
+        var uploadedCount = 0;
+
+        foreach (var item in SelectedItems.Where(item => item.State is UploadState.Pending or UploadState.Failed).ToList())
+        {
+            var uploaded = await UploadCoreAsync(item);
+            if (uploaded)
+            {
+                uploadedCount++;
+            }
+        }
+
+        IsUploading = false;
+
+        if (uploadedCount > 0)
+        {
+            StatusMessage = uploadedCount == 1
+                ? "1 image uploaded successfully."
+                : $"{uploadedCount} images uploaded successfully.";
+        }
+    }
+
+    private async Task RetryFailedAsync()
+    {
+        if (IsUploading)
+        {
+            return;
+        }
+
+        IsUploading = true;
+        StatusMessage = null;
+
+        foreach (var item in SelectedItems.Where(item => item.State == UploadState.Failed).ToList())
+        {
+            await UploadCoreAsync(item);
+        }
+
+        IsUploading = false;
+    }
+
+    private async Task UploadItemAsync(SelectedUploadItem item)
+    {
+        if (!CanUploadItem(item))
+        {
+            return;
+        }
+
+        IsUploading = true;
+        StatusMessage = null;
+        await UploadCoreAsync(item);
+        IsUploading = false;
+    }
+
+    private async Task<bool> UploadCoreAsync(SelectedUploadItem item)
+    {
+        item.State = UploadState.Uploading;
+        item.ErrorMessage = null;
+        item.StatusDetails = "Reading file from the browser...";
+        item.ProgressPercent = 0;
+
+        try
+        {
+            using var content = await ReadFileToMemoryAsync(item);
+            var headerBytes = GetHeaderBytes(content);
+            var validation = ImageFileValidator.Validate(item.DisplayName, item.BrowserContentType, item.SizeInBytes, headerBytes);
+
+            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
+            {
+                throw new InvalidOperationException(validation.ErrorMessage ?? "The image failed validation.");
+            }
+
+            content.Position = 0;
+            var uploadProgress = new Progress<long>(uploadedBytes =>
+            {
+                var uploadPercent = content.Length == 0
+                    ? 100
+                    : (int)Math.Round(uploadedBytes * 70d / content.Length);
+
+                item.ProgressPercent = Math.Clamp(30 + uploadPercent, 30, 100);
+                item.StatusDetails = "Uploading to Azure Blob Storage...";
+                _ = InvokeAsync(StateHasChanged);
+            });
+
+            var result = await ImageStorageService.UploadAsync(
+                new UploadImageRequest(item.DisplayName, validation.NormalizedContentType, item.SizeInBytes, content),
+                uploadProgress,
+                CancellationToken.None);
+
+            item.State = UploadState.Success;
+            item.ProgressPercent = 100;
+            item.StatusDetails = $"Uploaded {result.UploadedAt.LocalDateTime:g}.";
+            item.StoredBlobName = result.BlobName;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            item.State = UploadState.Failed;
+            item.ProgressPercent = 0;
+            item.StatusDetails = "Upload failed.";
+            item.ErrorMessage = ex.Message;
+            return false;
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task<MemoryStream> ReadFileToMemoryAsync(SelectedUploadItem item)
+    {
+        await using var browserStream = item.File.OpenReadStream(MaxUploadBytes, CancellationToken.None);
+        var buffer = ArrayPool<byte>.Shared.Rent(80 * 1024);
+        var memoryStream = new MemoryStream(capacity: item.SizeInBytes > int.MaxValue ? int.MaxValue : (int)item.SizeInBytes);
+        long totalRead = 0;
+
+        try
+        {
+            while (true)
+            {
+                var bytesRead = await browserStream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken.None);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                await memoryStream.WriteAsync(buffer.AsMemory(0, bytesRead), CancellationToken.None);
+                totalRead += bytesRead;
+                item.ProgressPercent = item.SizeInBytes == 0
+                    ? 0
+                    : Math.Clamp((int)Math.Round(totalRead * 30d / item.SizeInBytes), 1, 30);
+                item.StatusDetails = "Reading file from the browser...";
+                await InvokeAsync(StateHasChanged);
+            }
+
+            memoryStream.Position = 0;
+            return memoryStream;
+        }
+        catch
+        {
+            memoryStream.Dispose();
+            throw;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    private static byte[] GetHeaderBytes(MemoryStream memoryStream)
+    {
+        if (memoryStream.TryGetBuffer(out var buffer))
+        {
+            return buffer.AsSpan(0, (int)Math.Min(memoryStream.Length, 32)).ToArray();
+        }
+
+        var bytes = memoryStream.ToArray();
+        return bytes.AsSpan(0, Math.Min(bytes.Length, 32)).ToArray();
+    }
+
+    private async Task<string?> CreatePreviewDataUrlAsync(IBrowserFile file)
+    {
+        try
+        {
+            var previewFile = await file.RequestImageFileAsync(file.ContentType, PreviewDimension, PreviewDimension);
+            await using var previewStream = previewFile.OpenReadStream(MaxPreviewBytes);
+            using var memoryStream = new MemoryStream();
+            await previewStream.CopyToAsync(memoryStream);
+            var base64 = Convert.ToBase64String(memoryStream.ToArray());
+            return $"data:{previewFile.ContentType};base64,{base64}";
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ClearSelection()
+    {
+        if (IsUploading)
+        {
+            return;
+        }
+
+        SelectedItems.Clear();
+        StatusMessage = null;
+    }
+
+    private bool CanUploadItem(SelectedUploadItem item) =>
+        !IsUploading && item.State is UploadState.Pending or UploadState.Failed;
+
+    private static string GetStatusBadgeClass(UploadState state) =>
+        state switch
+        {
+            UploadState.Success => "badge text-bg-success",
+            UploadState.Uploading => "badge text-bg-primary",
+            UploadState.Failed => "badge text-bg-danger",
+            _ => "badge text-bg-secondary"
+        };
+
+    private static string GetStatusLabel(UploadState state) =>
+        state switch
+        {
+            UploadState.Success => "Uploaded",
+            UploadState.Uploading => "Uploading",
+            UploadState.Failed => "Failed",
+            _ => "Ready"
+        };
+
+    private enum UploadState
+    {
+        Pending,
+        Uploading,
+        Success,
+        Failed
+    }
+
+    private sealed class SelectedUploadItem
+    {
+        public Guid Id { get; } = Guid.NewGuid();
+
+        public required IBrowserFile File { get; init; }
+
+        public required string DisplayName { get; init; }
+
+        public required string BrowserContentType { get; init; }
+
+        public required long SizeInBytes { get; init; }
+
+        public string? PreviewDataUrl { get; init; }
+
+        public UploadState State { get; set; }
+
+        public int ProgressPercent { get; set; }
+
+        public string StatusDetails { get; set; } = "Ready to upload.";
+
+        public string? ErrorMessage { get; set; }
+
+        public string? StoredBlobName { get; set; }
+    }
+}

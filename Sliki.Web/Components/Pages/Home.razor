@@ -1,0 +1,35 @@
+﻿@page "/"
+
+<PageTitle>Sliki</PageTitle>
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Azure App Service + Blob Storage</p>
+        <h1>Upload and browse images in a private <code>sliki</code> container.</h1>
+        <p class="hero-copy">
+            Sliki is a Blazor-based image app that runs in Azure, authenticates to Blob Storage with Managed Identity,
+            validates uploads on the client and server, and serves private images back through the app.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="upload">Open uploader</a>
+            <a class="btn btn-outline-primary" href="gallery">Browse gallery</a>
+        </div>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+    <article class="surface-card">
+        <h2>Upload flow</h2>
+        <p>Select one or more JPEG, PNG, GIF, WebP, or BMP files, preview them before upload, and send them to Azure Blob Storage with live progress per file.</p>
+    </article>
+
+    <article class="surface-card">
+        <h2>Storage security</h2>
+        <p>The storage container stays private. Reads and writes go through the app, and Azure authentication uses <strong>DefaultAzureCredential</strong> so Managed Identity works in App Service without secrets.</p>
+    </article>
+
+    <article class="surface-card">
+        <h2>Gallery features</h2>
+        <p>Browse uploaded images with paging, file-name filtering, date or name sorting, and a full-size preview dialog.</p>
+    </article>
+</section>

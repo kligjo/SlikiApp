@@ -1,0 +1,156 @@
+name: Build and deploy Sliki to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: sliki-production
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: 10.0.x
+  SOLUTION_PATH: SlikiApp.slnx
+  PROJECT_PATH: Sliki.Web/Sliki.Web.csproj
+  PUBLISH_DIR: publish
+  PACKAGE_PATH: sliki-web.zip
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+
+      - name: Publish web app
+        run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --output ${{ env.PUBLISH_DIR }} --no-build
+
+      - name: Create deployment package
+        run: |
+          cd "${{ env.PUBLISH_DIR }}"
+          zip -r "../${{ env.PACKAGE_PATH }}" .
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sliki-web-package
+          path: ${{ env.PACKAGE_PATH }}
+          if-no-files-found: error
+
+  deploy_infrastructure:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    outputs:
+      webapp_name: ${{ steps.deploy.outputs.webapp_name }}
+      webapp_url: ${{ steps.deploy.outputs.webapp_url }}
+
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate pipeline configuration
+        shell: bash
+        run: |
+          missing=0
+          for name in AZURE_RESOURCE_GROUP AZURE_LOCATION; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name GitHub variable is required."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name "$AZURE_RESOURCE_GROUP" \
+            --location "$AZURE_LOCATION" \
+            --output none
+
+      - name: Deploy infrastructure
+        id: deploy
+        shell: bash
+        run: |
+          deployment_outputs=$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --template-file ./infra/main.bicep \
+            --parameters @./infra/main.parameters.json \
+            --parameters location="$AZURE_LOCATION" \
+            --query "properties.outputs" \
+            --output json)
+
+          webapp_name=$(python -c "import json,sys; print(json.load(sys.stdin)['webAppName']['value'])" <<< "$deployment_outputs")
+          webapp_url=$(python -c "import json,sys; print(json.load(sys.stdin)['webAppUrl']['value'])" <<< "$deployment_outputs")
+
+          echo "webapp_name=$webapp_name" >> "$GITHUB_OUTPUT"
+          echo "webapp_url=$webapp_url" >> "$GITHUB_OUTPUT"
+
+  deploy_application:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - deploy_infrastructure
+    environment:
+      name: production
+      url: ${{ needs.deploy_infrastructure.outputs.webapp_url }}
+
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_WEBAPP_NAME: ${{ needs.deploy_infrastructure.outputs.webapp_name }}
+
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: sliki-web-package
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy web app package
+        shell: bash
+        run: |
+          az webapp deploy \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --src-path "./${{ env.PACKAGE_PATH }}" \
+            --type zip \
+            --clean true \
+            --restart true \
+            --output none

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "appBaseName": {
+      "value": "sliki"
+    },
+    "environmentName": {
+      "value": "dev"
+    },
+    "containerName": {
+      "value": "sliki"
+    },
+    "appServiceSkuName": {
+      "value": "B1"
+    },
+    "appServiceSkuTier": {
+      "value": "Basic"
+    },
+    "linuxFxVersion": {
+      "value": "DOTNETCORE|10.0"
+    },
+    "maxUploadBytes": {
+      "value": 10485760
+    },
+    "pageSize": {
+      "value": 12
+    }
+  }
+}
