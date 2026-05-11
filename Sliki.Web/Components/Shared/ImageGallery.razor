@@ -1,3 +1,5 @@
+@inject NavigationManager NavigationManager
+@inject IOptions<AccessTokenOptions> AccessTokenOptions
 @inject IImageStorageService ImageStorageService
 @inject ImageFileValidator ImageFileValidator
 
@@ -153,7 +155,14 @@ else
         }
     }
 
-    private static string GetImageUrl(string blobName) => $"/images/{Uri.EscapeDataString(blobName)}";
+    private string? CurrentAccessToken =>
+        AccessTokenUrlHelper.GetTokenFromAbsoluteUri(NavigationManager.Uri, AccessTokenOptions.Value.QueryParameterName);
+
+    private string GetImageUrl(string blobName) =>
+        AccessTokenUrlHelper.AppendToken(
+            $"/images/{Uri.EscapeDataString(blobName)}",
+            AccessTokenOptions.Value.QueryParameterName,
+            CurrentAccessToken);
 
     private void OpenImage(GalleryImageItem image) => SelectedImage = image;
 

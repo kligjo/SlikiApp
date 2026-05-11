@@ -1,4 +1,6 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IOptions<AccessTokenOptions> AccessTokenOptions
 
 <PageTitle>Sliki</PageTitle>
 
@@ -11,8 +13,8 @@
             validates uploads on the client and server, and serves private images back through the app.
         </p>
         <div class="hero-actions">
-            <a class="btn btn-primary" href="upload">Open uploader</a>
-            <a class="btn btn-outline-primary" href="gallery">Browse gallery</a>
+            <a class="btn btn-primary" href="@UploadUrl">Open uploader</a>
+            <a class="btn btn-outline-primary" href="@GalleryUrl">Browse gallery</a>
         </div>
     </div>
 </section>
@@ -33,3 +35,12 @@
         <p>Browse uploaded images with paging, file-name filtering, date or name sorting, and a full-size preview dialog.</p>
     </article>
 </section>
+
+@code {
+    private string? CurrentAccessToken =>
+        AccessTokenUrlHelper.GetTokenFromAbsoluteUri(NavigationManager.Uri, AccessTokenOptions.Value.QueryParameterName);
+
+    private string UploadUrl => AccessTokenUrlHelper.AppendToken("/upload", AccessTokenOptions.Value.QueryParameterName, CurrentAccessToken);
+
+    private string GalleryUrl => AccessTokenUrlHelper.AppendToken("/gallery", AccessTokenOptions.Value.QueryParameterName, CurrentAccessToken);
+}

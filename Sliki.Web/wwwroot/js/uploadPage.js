@@ -1,12 +1,19 @@
 const uploaders = new Map();
 
-export function initializeUploader(config) {
-    const root = document.getElementById(config.rootId);
+export function initializeUploader(rootId) {
+    const root = document.getElementById(rootId);
     if (!root) {
         return;
     }
 
-    disposeUploader(config.rootId);
+    disposeUploader(rootId);
+
+    const config = {
+        rootId,
+        uploadUrl: root.dataset.uploadUrl,
+        maxUploadBytes: Number(root.dataset.maxUploadBytes || "0"),
+        acceptedMimeTypes: (root.dataset.acceptedMimeTypes || "").split(",").filter(Boolean)
+    };
 
     const state = {
         root,
@@ -36,7 +43,7 @@ export function initializeUploader(config) {
     state.retryFailedButton.addEventListener("click", state.onRetryFailed);
     state.clearSelectionButton.addEventListener("click", state.onClear);
 
-    uploaders.set(config.rootId, state);
+    uploaders.set(rootId, state);
     render(state);
 }
 
