@@ -108,6 +108,7 @@ jobs:
             --template-file ./infra/main.bicep \
             --parameters @./infra/main.parameters.json \
             --parameters location="$AZURE_LOCATION" \
+            --parameters sqlAdminPassword="${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}" \
             --query "properties.outputs" \
             --output json)
 

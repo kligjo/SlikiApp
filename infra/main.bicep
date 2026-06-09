@@ -37,6 +37,13 @@ param maxUploadBytes int = 10485760
 @maxValue(50)
 param pageSize int = 12
 
+@description('SQL Server administrator login name.')
+param sqlAdminLogin string = 'sqladmin'
+
+@description('SQL Server administrator password.')
+@secure()
+param sqlAdminPassword string
+
 var normalizedBaseName = toLower(replace(appBaseName, '-', ''))
 var uniqueSuffix = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, appBaseName, environmentName))
 var webAppName = take('${normalizedBaseName}-${environmentName}-${uniqueSuffix}', 60)
@@ -44,6 +51,8 @@ var appServicePlanName = '${appBaseName}-${environmentName}-plan'
 var storageAccountName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24)
 var workspaceName = '${appBaseName}-${environmentName}-law'
 var appInsightsName = '${appBaseName}-${environmentName}-appi'
+var sqlServerName = '${appBaseName}-${environmentName}-sql'
+var sqlDatabaseName = '${appBaseName}-${environmentName}-db'
 var blobContributorRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
   'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
@@ -153,6 +162,14 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'BlobStorage__PageSize'
           value: string(pageSize)
         }
+        {
+          name: 'ConnectionStrings__umbracoDbDSN'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+        }
+        {
+          name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
+          value: 'Microsoft.Data.SqlClient'
+        }
       ]
     }
   }
@@ -168,7 +185,43 @@ resource blobContributorAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
+resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
+  name: sqlServerName
+  location: location
+  properties: {
+    administratorLogin: sqlAdminLogin
+    administratorLoginPassword: sqlAdminPassword
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource sqlFirewallAllowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+  name: 'AllowAllWindowsAzureIps'
+  parent: sqlServer
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
+
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
+  name: sqlDatabaseName
+  parent: sqlServer
+  location: location
+  sku: {
+    name: 'Basic'
+    tier: 'Basic'
+  }
+  properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 2147483648
+  }
+}
+
 output webAppName string = webApp.name
 output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
 output storageAccountName string = storageAccount.name
 output blobContainerName string = imageContainer.name
+output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
+output sqlDatabaseName string = sqlDatabase.name
