@@ -19,15 +19,6 @@ param environmentName string = 'dev'
 @description('Blob container name used by the application.')
 param containerName string = 'desklmphotos'
 
-@description('App Service plan SKU. Use F1 for Free (dev/test) or B1 for Basic.')
-param appServiceSkuName string = 'B1'
-
-@description('App Service plan tier. Use Free for dev/test or Basic for B1.')
-param appServiceSkuTier string = 'Basic'
-
-@description('Linux runtime stack for the web app.')
-param linuxFxVersion string = 'DOTNETCORE|10.0'
-
 @description('Maximum upload size per file in bytes.')
 @minValue(1048576)
 param maxUploadBytes int = 10485760
@@ -46,8 +37,9 @@ param sqlAdminPassword string
 
 var normalizedBaseName = toLower(replace(appBaseName, '-', ''))
 var uniqueSuffix = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, appBaseName, environmentName))
-var webAppName = take('${normalizedBaseName}-${environmentName}-${uniqueSuffix}', 60)
-var appServicePlanName = '${appBaseName}-${environmentName}-plan'
+var acrName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 50)
+var containerAppName = '${appBaseName}-${environmentName}-app'
+var containerAppsEnvName = '${appBaseName}-${environmentName}-cae'
 var storageAccountName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24)
 var workspaceName = '${appBaseName}-${environmentName}-law'
 var appInsightsName = '${appBaseName}-${environmentName}-appi'
@@ -56,6 +48,9 @@ var sqlDatabaseName = '${appBaseName}-${environmentName}-db'
 var blobContributorRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
   'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+var acrPullRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -109,77 +104,126 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: appServicePlanName
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+  name: acrName
   location: location
-  kind: 'linux'
   sku: {
-    name: appServiceSkuName
-    tier: appServiceSkuTier
+    name: 'Basic'
   }
   properties: {
-    reserved: true
+    adminUserEnabled: true
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2023-12-01' = {
-  name: webAppName
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
+  name: containerAppsEnvName
   location: location
-  kind: 'app,linux'
-  identity: {
-    type: 'SystemAssigned'
-  }
   properties: {
-    serverFarmId: appServicePlan.id
-    httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|10.0'
-      alwaysOn: false
-      minTlsVersion: '1.2'
-      ftpsState: 'Disabled'
-      appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: applicationInsights.properties.ConnectionString
-        }
-        {
-          name: 'ASPNETCORE_ENVIRONMENT'
-          value: 'Production'
-        }
-        {
-          name: 'BlobStorage__ServiceUri'
-          value: storageAccount.properties.primaryEndpoints.blob
-        }
-        {
-          name: 'BlobStorage__ContainerName'
-          value: containerName
-        }
-        {
-          name: 'BlobStorage__MaxUploadBytes'
-          value: string(maxUploadBytes)
-        }
-        {
-          name: 'BlobStorage__PageSize'
-          value: string(pageSize)
-        }
-        {
-          name: 'ConnectionStrings__umbracoDbDSN'
-          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
-        }
-        {
-          name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
-          value: 'Microsoft.Data.SqlClient'
-        }
-      ]
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalyticsWorkspace.properties.customerId
+        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
+      }
     }
   }
 }
 
+resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
+  name: containerAppName
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    managedEnvironmentId: containerAppsEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 8080
+        transport: 'auto'
+      }
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          identity: 'system'
+        }
+      ]
+      secrets: [
+        {
+          name: 'db-connection-string'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: normalizedBaseName
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          env: [
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: applicationInsights.properties.ConnectionString
+            }
+            {
+              name: 'ASPNETCORE_ENVIRONMENT'
+              value: 'Production'
+            }
+            {
+              name: 'BlobStorage__ServiceUri'
+              value: storageAccount.properties.primaryEndpoints.blob
+            }
+            {
+              name: 'BlobStorage__ContainerName'
+              value: containerName
+            }
+            {
+              name: 'BlobStorage__MaxUploadBytes'
+              value: string(maxUploadBytes)
+            }
+            {
+              name: 'BlobStorage__PageSize'
+              value: string(pageSize)
+            }
+            {
+              name: 'ConnectionStrings__umbracoDbDSN'
+              secretRef: 'db-connection-string'
+            }
+            {
+              name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
+              value: 'Microsoft.Data.SqlClient'
+            }
+          ]
+          resources: {
+            cpu: json('1.0')
+            memory: '2Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 3
+      }
+    }
+  }
+}
+
+resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, containerApp.id, acrPullRoleId)
+  scope: containerRegistry
+  properties: {
+    principalId: containerApp.identity.principalId
+    roleDefinitionId: acrPullRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 resource blobContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, webApp.id, blobContributorRoleId)
+  name: guid(storageAccount.id, containerApp.id, blobContributorRoleId)
   scope: storageAccount
   properties: {
-    principalId: webApp.identity.principalId
+    principalId: containerApp.identity.principalId
     roleDefinitionId: blobContributorRoleId
     principalType: 'ServicePrincipal'
   }
@@ -210,17 +254,17 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
   parent: sqlServer
   location: location
   sku: {
-    name: 'Basic'
-    tier: 'Basic'
+    name: 'S0'
+    tier: 'Standard'
   }
-  properties: {
-    collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: 2147483648
   }
 }
 
-output webAppName string = webApp.name
-output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
+output containerAppName string = containerApp.name
+output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
+output acrLoginServer string = containerRegistry.properties.loginServer
+output acrName string = containerRegistry.name
 output storageAccountName string = storageAccount.name
 output blobContainerName string = imageContainer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName

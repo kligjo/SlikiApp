@@ -1,0 +1,8 @@
+**/.vs
+**/.git
+**/.gitignore
+**/bin
+**/obj
+**/*.user
+**/node_modules
+**/publish

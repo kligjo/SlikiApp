@@ -14,17 +14,14 @@
     "containerName": {
       "value": "desklmphotos"
     },
-    "appServiceSkuName": {
-      "value": "B1"
-    },
-    "appServiceSkuTier": {
-      "value": "Basic"
-    },
     "maxUploadBytes": {
       "value": 10485760
     },
     "pageSize": {
       "value": 12
+    },
+    "sqlAdminLogin": {
+      "value": "sqladmin"
     }
   }
 }
