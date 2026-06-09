@@ -1,0 +1,26 @@
+@model UmbracoCms.Web.Components.Button
+@inject UmbracoCms.Web.Services.RequestAccessTokenService RequestAccessTokenService
+
+<@(Model.Element) 
+    type="@(!Model.Type.IsNullOrEmpty() ? Model.Type : Model.Element == "button" ? "button" : null)"
+    href="@RequestAccessTokenService.AppendCurrentToken(Model.Url).NullOrEmptyAsNull()"
+    target="@Model.Target.NullOrEmptyAsNull()"
+    rel="@(Model.Target == "_blank" ? "noopener noreferrer" : null)"
+    aria-controls="@Model.Controls.NullOrEmptyAsNull()"
+    class="
+        @(!Model.Variant.IsNullOrEmpty() ? $"c-button--{Model.Variant}" : "c-button")
+        @(!Model.Size.IsNullOrEmpty() ? $" button--{Model.Size}" : "")
+        @(!Model.Icon.IsNullOrEmpty() ? " button--icon" : "")
+        @Model.Class"
+    @Html.Attribute(Model.Hook?.EnsureStartsWith("js-hook-"))
+    @Html.Attributes(Model.Attributes)
+>
+
+	<span class="button__label">@Model.Label</span>
+
+	@if (!Model.Icon.IsNullOrEmpty())
+	{
+		<span class="button__icon"><svg src="@Model.Icon"/></span>
+	}
+
+</@(Model.Element)>

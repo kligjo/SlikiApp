@@ -1,0 +1,13 @@
+@using Microsoft.Extensions.Hosting
+@inject IHostEnvironment _hostEnvironment
+
+<script>
+	(function () {
+		var environment = '@_hostEnvironment.EnvironmentName?.ToLowerInvariant()';
+		var endpoint = '/api/v1/';
+
+		window.EnvironmentSettings = {};
+		window.EnvironmentSettings.endpoint     = endpoint;
+		window.EnvironmentSettings.environment  = environment;
+	})();
+</script>

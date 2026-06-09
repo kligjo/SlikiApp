@@ -1,0 +1,11 @@
+@model UmbracoCms.Web.Components.Cookies.CookieBar
+
+<div class="c-cookie-bar" data-cookie-version="@Model.Version" js-hook-cookies-bar>
+	<div class="cookie-bar__content o-container">
+		<div class="cookie-bar__text">@Html.Raw(Model.Text)</div>
+		<div class="cookie-bar__button-holder">
+			<partial name="Button" for="ButtonCookiePage" />
+			<partial name="Button" for="ButtonAgree" />
+		</div>
+	</div>
+</div>

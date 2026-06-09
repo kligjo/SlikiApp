@@ -1,0 +1,22 @@
+@model UmbracoCms.Web.Components.NestedBlock.NestedBlock2Column
+
+<div class="c-content-block">
+	<div class="o-grid u-flex-nowrap--lg">
+		<div class="o-col-12 o-col-6--lg u-margin-right--md">
+			<div>
+				@await Component.InvokeAsync(
+					Model.LeftBlock.Content.GetViewComponentName(), 
+					new { Item = Model.LeftBlock, AltView = $"NestedBlock2Column/{Model.LeftBlock.Content.GetViewComponentName()}" }
+				)
+			</div>
+		</div>
+		<div class="o-col-12 o-col-6--lg">
+			<div>
+				@await Component.InvokeAsync(
+					Model.RightBlock.Content.GetViewComponentName(),
+					new { Item = Model.RightBlock, AltView = $"NestedBlock2Column/{Model.RightBlock.Content.GetViewComponentName()}" }
+				)
+			</div>
+		</div>
+	</div>
+</div>

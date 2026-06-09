@@ -1,0 +1,7 @@
+@model UmbracoCms.Web.Components.Link
+@inject UmbracoCms.Web.Services.RequestAccessTokenService RequestAccessTokenService
+
+<a href="@RequestAccessTokenService.AppendCurrentToken(Model.Url)" target="@Model.Target" class="@Model.CssClasses" title="@Model.Label" asp-extra-attribs="@Model.Attributes">
+	@Model.Label
+	<svg src="@Model.IconPath" />
+</a>

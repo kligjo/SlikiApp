@@ -1,0 +1,10 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<dynamic>
+
+@* Macros are deprecated in Umbraco 14+. This view is kept for grid compatibility but requires migration to partial views or view components. *@
+@if (Model.value != null)
+{
+    <text>
+        @* TODO: Replace macro rendering with partial view or view component invocation *@
+        <p>Macro rendering is not supported in Umbraco 17. Migrate macro "@Model.value.macroAlias" to a view component.</p>
+    </text>
+}

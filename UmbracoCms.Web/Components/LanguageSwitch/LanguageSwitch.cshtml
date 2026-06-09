@@ -1,0 +1,11 @@
+@using UmbracoCms.Web.Components
+@model UmbracoCms.Web.Components.LanguageSwitch
+
+<div class="c-language-switch">
+    @foreach (LanguageSwitch.Language language in Model.Languages)
+    {
+        <a class="@(language.IsActive ? "active" : null)" href="@language.Url" title="@language.Label">
+            <svg src="@language.Icon" />
+        </a>
+    }
+</div>

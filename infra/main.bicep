@@ -6,7 +6,7 @@ param location string = resourceGroup().location
 @description('Short application base name used for generated resource names.')
 @minLength(3)
 @maxLength(18)
-param appBaseName string = 'sliki'
+param appBaseName string = 'desklmphotos'
 
 @description('Environment suffix used in resource names.')
 @allowed([
@@ -17,13 +17,13 @@ param appBaseName string = 'sliki'
 param environmentName string = 'dev'
 
 @description('Blob container name used by the application.')
-param containerName string = 'sliki'
+param containerName string = 'desklmphotos'
 
-@description('App Service plan SKU.')
-param appServiceSkuName string = 'B1'
+@description('App Service plan SKU. Use F1 for Free (dev/test) or B1 for Basic.')
+param appServiceSkuName string = 'F1'
 
-@description('App Service plan tier.')
-param appServiceSkuTier string = 'Basic'
+@description('App Service plan tier. Use Free for dev/test or Basic for B1.')
+param appServiceSkuTier string = 'Free'
 
 @description('Linux runtime stack for the web app.')
 param linuxFxVersion string = 'DOTNETCORE|10.0'
@@ -125,7 +125,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
-      alwaysOn: true
+      alwaysOn: false
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
       appSettings: [

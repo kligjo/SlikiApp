@@ -1,0 +1,20 @@
+@using UmbracoCms.Web.Components
+@model UmbracoCms.Web.Components.Breadcrumb
+
+@if(!Model.Pages.Any()){return;}
+
+<div class="c-breadcrumb">
+	<span id="breadcrumb-label" class="u-sr-only" asp-translation="@TranslationAliases.Common.Breadcrumb.Label"></span>
+	<ol class="breadcrumb__list" id="breadcrumb" aria-labelledby="breadcrumb-label" itemscope itemtype="http://schema.org/BreadcrumbList">
+        @foreach ((Link? item, int pos) in Model.Pages.Select((item, pos) => (item, pos+1)))
+		{
+            bool isLastItem = (pos == Model.Pages.Count);
+            <li class="breadcrumb__list-item" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+				<a class="breadcrumb__item @(isLastItem ? "breadcrumb__item--current" : null)" itemprop="item" href="@(isLastItem ? "#" : item.Url)" title="@item.Label">
+					<span itemprop="name">@item.Label</span>
+				</a>
+				<meta itemprop="position" content="@pos">
+			</li>
+		}
+	</ol>
+</div>

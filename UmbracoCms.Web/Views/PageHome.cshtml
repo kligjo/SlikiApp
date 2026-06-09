@@ -1,0 +1,19 @@
+﻿@using Umbraco.Cms.Core.Models.Blocks
+@inherits UmbracoViewPage<PageHome>
+@{
+    string pageTitle = string.IsNullOrWhiteSpace(Model.Title) ? Model.Name : Model.Title;
+}
+
+<div class="o-container sliki-home">
+    <div class="sliki-home__shell">
+        <header class="sliki-home__hero">
+            <h1 class="sliki-home__title">@pageTitle</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.Intro))
+            {
+                <p class="sliki-home__intro">@Model.Intro</p>
+            }
+        </header>
+
+        <partial name="_BlockList" model="Model.ContentBlocks ?? BlockListModel.Empty" />
+    </div>
+</div>

@@ -1,0 +1,19 @@
+@inherits UmbracoViewPage<UmbracoCms.Web.Components.BasePage.SocialSharing>
+
+@if(!Model.SocialChannels.Any()){return;}
+
+<div class="c-social-share">
+	<h3 class="social-share__title" asp-translation="@TranslationAliases.Common.SocialSharing.Title"></h3>
+	<ul class="social-share__list">
+		@foreach (var socialChannel in Model.SocialChannels)
+		{
+			string label = Umbraco.GetTranslation(socialChannel.Label);
+			<li class="social-share__list-item @socialChannel.CssClasses">
+				<button class="social-share__button" title="@label" on:click.prevent="social-share::@socialChannel.Id">
+					<span class="u-sr-only">@label</span>
+					<svg src="@socialChannel.Icon"/>
+				</button>
+			</li>
+		}
+	</ul>
+</div>

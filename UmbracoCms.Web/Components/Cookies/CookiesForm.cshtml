@@ -1,0 +1,26 @@
+@using UmbracoCms.Web.Components.Cookies
+@model UmbracoCms.Web.Components.Cookies.CookiesForm
+
+@if(!Model.CookieOptions.Any())return;
+
+<div class="grid-12">
+    <div class="col-12 col-md-10 col-lg-8">
+        <div class="m-content-container">
+            <div class="m-rich-text">
+                @Html.Raw(Model.Text)
+                <form action="@Model.PageUrl"class="m-form" js-hook-cookies-form>
+                    @foreach (CookiesFormOption option in Model.CookieOptions)
+                    {
+                        <div class="form-group">
+                            <div class="c-checkbox">
+                                <input type="checkbox" id="@option.Id" value="@option.Value" checked="@option.Required" disabled="@option.Required" js-hook-cookies-option>
+                                <label class="checkbox-form__label" for="@option.Id">@option.Label</label>
+                            </div>
+                        </div>
+                    }
+                    <button type="submit" class="button" js-hook-cookies-form-accept asp-translation="@TranslationAliases.Common.Cookies.Save"></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

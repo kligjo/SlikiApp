@@ -1,0 +1,33 @@
+@using UmbracoCms.Web.Components
+@model UmbracoCms.Web.Components.Footer
+
+<footer class="c-footer" id="footer">
+	<div class="o-container">
+		<div class="o-grid">
+			<div class="o-col-12 o-col-8--md">
+				<div class="footer-links">
+					<ul class="footer-links__list">
+						@foreach (Link? link in Model.Links)
+						{
+							<li class="footer-links__list-item">
+								<partial name="Link" model="link" />
+							</li>
+						}
+					</ul>
+				</div>
+			</div>
+			<div class="o-col-12 o-col-4--md">
+				<div class="footer-social">
+					<ul class="footer-social__list">
+					@foreach (var link in Model.SocialLinks?.Links ?? Enumerable.Empty<Components.Link>())
+					{
+						<li class="footer-social__list-item">
+							<partial name="Link" model="link" />
+						</li>
+					}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>

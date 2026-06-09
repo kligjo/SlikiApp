@@ -1,0 +1,32 @@
+@using UmbracoCms.Web.Models.Globalization
+@model UmbracoCms.Web.Components.BasePage.MetaTags
+
+<title>@Model.Title</title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="description" content="@Model.Description">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="lang" content="@Model.Language" />
+<meta name="robots" content="@Model.Robots">
+
+<link rel="canonical" href="@Model.CanonicalUrl" asp-if="@Model.CanonicalUrl" />
+@foreach (AlternateUrl alternateUrl in Model.AlternateLanguageUrls)
+{
+	<link rel="alternate" href="@alternateUrl.Url" hreflang="@alternateUrl.Lang" />
+}
+@if (Model.AlternateLanguageUrls.FirstOrDefault(l => l.IsDefault) is {} defaultUrl)
+{
+    <link rel="alternate" href="@defaultUrl.Url" hreflang="x-default" />
+}
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="@Model.OpenGraph.Title" />
+<meta property="og:description" content="@Model.OpenGraph.Description" />
+<meta property="og:url" content="@Model.CanonicalUrl" asp-if="@Model.CanonicalUrl" />
+<meta property="og:image" content="@Model.OpenGraph.ImageUrl" asp-if="@Model.OpenGraph.ImageUrl" />
+<meta property="twitter:title" content="@Model.Twitter.Title" asp-if="@Model.Twitter.Title" />
+<meta property="twitter:description" content="@Model.Twitter.Description" asp-if="@Model.Twitter.Description" />
+<meta property="twitter:image" content="@Model.Twitter.ImageUrl" asp-if="@Model.Twitter.ImageUrl" />
+
+<meta name="application-name" content="@Model.ApplicationName">
+<meta name="apple-mobile-web-app-title" content="@Model.ApplicationName">

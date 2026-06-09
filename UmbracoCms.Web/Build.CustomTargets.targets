@@ -1,0 +1,29 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Copy ViewImports to Components directory -->
+    <Target Name="CopyComponentsViewImports" BeforeTargets="BeforeBuild" Inputs="Views\_ViewImports.cshtml" Outputs="Components\_ViewImports.cshtml">
+        <Copy SourceFiles="Views\_ViewImports.cshtml" DestinationFolder="Components" SkipUnchangedFiles="true" UseHardlinksIfPossible="true" />
+    </Target>
+
+    <!-- Copy modules App_Plugins directories to root -->
+    <Target Name="CopyModulesAppPlugins" BeforeTargets="BeforeBuild">
+        <ItemGroup>
+            <ModulesAppPlugins Include="Modules\**\App_Plugins\**\*.*" />
+        </ItemGroup>
+        <Message Text="Copying modules App_Plugins files: #@(ModulesAppPlugins->Count()) files" Importance="High" />
+        <Copy SourceFiles="@(ModulesAppPlugins)" DestinationFiles="@(ModulesAppPlugins->'App_Plugins\$([System.String]::new(''%(RecursiveDir)'').Replace(''App_Plugins'',''''))%(Filename)%(Extension)')" SkipUnchangedFiles="true" UseHardlinksIfPossible="true" />
+    </Target>
+
+    <!-- Clean modules from App_Plugins directory -->
+    <Target Name="ClearModulesAppPlugins" BeforeTargets="Clean">
+        <ItemGroup>
+            <ModulesAppPlugins Include="Modules\**\App_Plugins\**\*.*" />
+        </ItemGroup>
+        <ItemGroup>
+            <ModulesAppPlugins>
+                <DestinationDirectory>App_Plugins\$([System.String]::new('%(RecursiveDir)').Replace('App_Plugins', ''))</DestinationDirectory>
+            </ModulesAppPlugins>
+        </ItemGroup>
+        <Message Text="Clear old modules App_Plugins data" Importance="High" />
+        <RemoveDir Directories="@(ModulesAppPlugins->'%(DestinationDirectory)'->Distinct())" />
+    </Target>
+</Project>

@@ -1,0 +1,11 @@
+@model UmbracoCms.Web.Components.BasePage.StructuredData
+
+<script type="application/ld+json">
+    {
+    "@@context": "http://schema.org",
+    "@@type": "Organization",
+    "url": "@Model.HomePageUrl",
+    "name": "@Model.CompanyName",
+    "logo": "@Model.CompanyLogo"
+    }
+</script>

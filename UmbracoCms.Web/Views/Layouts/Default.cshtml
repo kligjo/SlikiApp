@@ -1,0 +1,32 @@
+@inherits UmbracoViewPage
+@inject NodeProvider NodeProvider
+@inject UmbracoCms.Web.Services.RequestAccessTokenService RequestAccessTokenService
+
+<!DOCTYPE html>
+
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName" dir="ltr" class="o-html @ViewBag.HtmlClass">
+<head>
+    <vc:meta-tags page="@Model" site-settings="@NodeProvider.SiteSettings" />
+    <vc:structured-data home-page="@NodeProvider.HomePage" site-settings="@NodeProvider.SiteSettings" />
+    <partial name="Stylesheets" />
+    <partial name="Environment" />
+
+    <vc:cookie-version site-settings="@NodeProvider.SiteSettings" />
+    @Html.Raw(NodeProvider.SiteSettings?.HeaderScripts)
+</head>
+<body>
+    <main id="content" role="main">
+        <vc:header home-page="@NodeProvider.HomePage" />
+
+        <div class="container">
+            @RenderBody()
+        </div>
+
+        <vc:footer site-settings="@NodeProvider.SiteSettings" />
+        <vc:cookie-bar site-settings="@NodeProvider.SiteSettings" />
+    </main>
+
+    <script defer src="@RequestAccessTokenService.AppendCurrentToken("/js/sliki-blocks.js")" asp-append-version="true"></script>
+    @Html.Raw(NodeProvider.SiteSettings?.BodyScripts)
+</body>
+</html>

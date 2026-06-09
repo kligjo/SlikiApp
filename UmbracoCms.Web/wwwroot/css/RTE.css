@@ -1,0 +1,40 @@
+
+/**umb_name:Header 2*/
+h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-block: 1.5rem 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+/**umb_name:Header 3*/
+h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-block: 1.25rem 0.75rem;
+}
+
+/**umb_name:Header 4*/
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-block: 1rem 0.5rem;
+}
+
+/**umb_name:Header 5*/
+h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-block: 0.75rem 0.5rem;
+}
+
+/**umb_name:Paragraph*/
+p {
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-block-end: 1rem;
+}

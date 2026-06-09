@@ -1,0 +1,26 @@
+@using UmbracoCms.Web.Components
+@model UmbracoCms.Web.Components.Header
+@inject UmbracoCms.Web.Services.RequestAccessTokenService RequestAccessTokenService
+
+<header class="c-header">
+	<div class="o-container">
+		<div class="u-flex u-flex-middle header__container">
+			<a href="@RequestAccessTokenService.AppendCurrentToken(Model.LogoUrl)" class="header__logo">
+				<span>Sliki</span>
+			</a>
+            <div class="header-navigation">
+                <nav class="header-navigation__nav" aria-label="Main menu" role="navigation">
+                    <ul class="header-navigation__list" role="menu">
+                        @foreach (Link? link in Model.Links)
+                        {
+                            <li class="header-navigation__item" role="menuitem">
+                                <partial name="Link" model="link" />
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+            <vc:language-switch />
+		</div>
+	</div>
+</header>

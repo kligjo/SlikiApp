@@ -1,0 +1,31 @@
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@using UmbracoCms.Web.Infrastructure.Configuration.Options
+@using Microsoft.AspNetCore.Mvc.Razor
+@using Umbraco.Cms.Core.Models.Blocks
+
+@model Umbraco.Cms.Core.Models.Blocks.BlockListModel
+@inject ILogger<RazorPage<BlockListModel>> _logger
+@inject IOptions<DevelopmentOptions> _developmentOptions
+
+@if (Model.Any() != true)
+{
+    return;
+}
+
+@foreach (BlockListItem? block in Model)
+{
+    if (block?.ContentUdi == null)
+    {
+        continue;
+    }
+	try
+	{
+		@(await Component.InvokeAsync(block.Content.GetViewComponentName(), new { Item = block }))
+	}
+	catch (Exception ex)
+	{
+		_logger.LogError(ex, "Error while trying to render block list item {BlockType}", block.Content.ContentType.Alias);
+		if (_developmentOptions.Value.DeveloperExceptionPage){ throw; }
+	}
+}

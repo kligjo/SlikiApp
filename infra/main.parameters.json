@@ -6,19 +6,19 @@
       "value": "westeurope"
     },
     "appBaseName": {
-      "value": "sliki"
+      "value": "desklmphotos"
     },
     "environmentName": {
       "value": "dev"
     },
     "containerName": {
-      "value": "sliki"
+      "value": "desklmphotos"
     },
     "appServiceSkuName": {
-      "value": "B1"
+      "value": "F1"
     },
     "appServiceSkuTier": {
-      "value": "Basic"
+      "value": "Free"
     },
     "linuxFxVersion": {
       "value": "DOTNETCORE|10.0"

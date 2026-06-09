@@ -1,0 +1,37 @@
+@using UmbracoCms.Web.Helpers.Aliases
+@model UmbracoCms.Web.Components.Image?
+
+@if(Model is null){ return; }
+
+<figure class="c-image @Model.Classes"
+        aria-hidden="@(Model.Hidden ? "true" : null)"
+        style="@(!Model.BackgroundColor.IsNullOrEmpty() ? $"--image-skeleton-color: {Model.BackgroundColor};" : null)"
+        js-hook-objectfit="@(Model.ObjectFit ? "" : null)"
+        asp-extra-attribs="@Model.Attributes">
+
+    @{ string preloadSvg = $"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {Model.AspectRatio.Width} {Model.AspectRatio.Height}'/%3E"; }
+    <div class="image__holder">
+		@if (!Model.Crops.Any() || !Model.SrcSet.IsNullOrEmpty())
+		{
+		    <img class="image__default" alt="@Model.Alt" src="@(Model.ShowPreload ? (!Model.Preload.IsNullOrEmpty() ? Model.Preload : preloadSvg) : null)" data-src="@Model.Url" data-srcset="@Model.SrcSet" />
+		}
+		else
+		{
+			<picture>
+				@foreach (((Components.Image.ImageCrop localCrop, CssBreakpoint breakpoint), int index) in Model.Crops.Select((c, i) => (c, i)))
+				{
+					string? mqStart = breakpoint.Start != null && index != 0 ? $"(min-width: {breakpoint.Start}px)" : null;
+					string? mqEnd = breakpoint.End != null && index != Model.Crops.Count - 1 ? $"(max-width: {breakpoint.End}px)" : null;
+					string? middle = !string.IsNullOrEmpty(mqStart) && !string.IsNullOrEmpty(mqEnd) ? " and " : null;
+					<source data-srcset="@localCrop.Url 1x" media="@mqStart @middle @mqEnd" type="image/jpeg" />
+				}
+                <img class="image__default" alt="@Model.Alt" src="@(Model.ShowPreload ? (!Model.Preload.IsNullOrEmpty() ? Model.Preload : preloadSvg) : null)" />
+            </picture>
+		}
+	</div>
+
+	@if (!Model.Caption.IsNullOrEmpty())
+	{
+		<figcaption class="image__caption">@Model.Caption</figcaption>
+	}
+</figure>

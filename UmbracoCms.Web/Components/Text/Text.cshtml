@@ -1,0 +1,9 @@
+@model UmbracoCms.Web.Components.Text
+
+<div class="s-rich-text @Model.CssClasses">
+	@if (!Model.Title.IsNullOrEmpty())
+	{
+		<h2>@Model.Title</h2>
+	}
+	@Html.Raw(Model.Content)
+</div>

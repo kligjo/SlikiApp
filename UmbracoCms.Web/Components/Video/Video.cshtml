@@ -1,0 +1,53 @@
+@using UmbracoCms.Web.Helpers.Extensions
+@model UmbracoCms.Web.Components.Video
+
+<div class="c-video @Model.Classes"
+     itemprop="video" itemscope itemtype="http://schema.org/VideoObject"
+     id="video-@Model.InstanceId"
+     data-video-platform="@Model.Platform"
+     data-video-id="@(Model.Id ?? Model.InstanceId)"
+     asp-data-video-time="@Model.StartTime"
+     asp-data-video-autopause="@(Model is { Platform: "vimeo", AutoPause: true } ? "true" : null)"
+     asp-data-video-muted="@(Model.Muted ? "true" : null)"
+     asp-data-video-autoplay="@(Model.Autoplay ? "true" : null)"
+     asp-data-video-playsinline="@(Model.PlaysInLine ? "true" : null)"
+     asp-data-video-controls="@(Model.Controls ? "true" : null)"
+     asp-data-video-loop="@(Model.Loop ? "true" : null)"
+     asp-data-video-sources="@Model.SourcesJson"
+     asp-data-video-closedcaptions="@Model.ClosedCaptions"
+     aria-label="@Model.Title.NullOrEmptyAsNull()"
+     js-hook-inview="@(Model.InView ? "" : null)"
+     asp-data-inview-persistent="@(Model.InView ? "true" : null)"
+     asp-data-inview-trigger="@(Model.InView ? $"video[video-{Model.InstanceId}]::inview" : null)"
+     role="application"
+     js-hook-video>
+
+    @if (!Model.Title.IsNullOrEmpty()){<meta itemprop="name" content="@Model.Title" />}
+	@if (!Model.Description.IsNullOrEmpty()){<meta itemprop="description" content="@Model.Description" />}
+	@if (!Model.TotalTime.IsNullOrEmpty()){<meta itemprop="duration" content="@Model.TotalTime" />}
+	@if (!(Model.Thumbnail?.Url).IsNullOrEmpty()){<meta itemprop="thumbnailUrl" content="@Model.Thumbnail.Url" />}
+	@if (!Model.EmbedUrl.IsNullOrEmpty()){<meta itemprop="embedURL" content="@Model.EmbedUrl" />}
+	@if (!Model.UploadDate.IsNullOrEmpty()){<meta itemprop="uploadDate" content="@Model.UploadDate" />}
+
+    <div class="video__player" js-hook-video-player></div>
+    <div class="video__loader"></div>
+
+    @if (Model.Controls)
+    {
+        <button class="video__button video__button--play" js-hook-video-play>
+            <span class="video__button-icon"></span>
+            <span class="u-sr-only">Play</span>
+        </button>
+        <button class="video__button video__button--pause" js-hook-video-pause>
+            <span class="video__button-icon">&#10073;&#10073;</span>
+            <span class="u-sr-only">Pause</span>
+        </button>
+        <button class="video__button video__button--replay" js-hook-video-replay>
+            <span class="video__button-icon">&#8635;</span>
+            <span class="u-sr-only">Replay</span>
+        </button>
+    }
+
+    <partial name="Image" model="Model.Thumbnail" />
+    <vc:cookie-wall />
+</div>

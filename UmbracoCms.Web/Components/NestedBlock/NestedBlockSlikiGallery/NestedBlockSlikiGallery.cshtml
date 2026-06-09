@@ -1,0 +1,76 @@
+@model UmbracoCms.Web.Components.NestedBlock.SlikiGalleryBlockViewModel
+
+<section class="sliki-block sliki-gallery" data-sliki-gallery id="@Model.RootId" data-list-url="@Model.ListUrl" data-image-url-template="@Model.ImageUrlTemplate" data-page-size="@Model.PageSize" data-query-parameter-name="@Model.QueryParameterName">
+    <div class="sliki-block__header">
+        <div>
+            <h2>@Model.Title</h2>
+            <p>@Model.Introduction</p>
+        </div>
+    </div>
+
+    <div class="sliki-panel">
+        <div class="sliki-gallery__toolbar">
+            <div class="sliki-field">
+                <label class="sliki-field__label" for="@($"{Model.RootId}-search")">Filter by file name</label>
+                <input id="@($"{Model.RootId}-search")" class="sliki-field__input" type="search" placeholder="Search images" data-gallery-search />
+            </div>
+
+            <div class="sliki-field">
+                <label class="sliki-field__label" for="@($"{Model.RootId}-sort")">Sort</label>
+                <select id="@($"{Model.RootId}-sort")" class="sliki-field__input" data-gallery-sort>
+                    <option value="LatestFirst">Newest first</option>
+                    <option value="OldestFirst">Oldest first</option>
+                    <option value="NameAscending">Name A-Z</option>
+                    <option value="NameDescending">Name Z-A</option>
+                </select>
+            </div>
+
+            <div class="sliki-actions sliki-actions--compact">
+                <button type="button" class="c-button" data-gallery-apply>
+                    <span class="button__label">Apply</span>
+                </button>
+                <button type="button" class="c-button c-button--secondary" data-gallery-reset>
+                    <span class="button__label">Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sliki-alert sliki-alert--error is-hidden" role="alert" data-gallery-error></div>
+        <p class="sliki-caption is-hidden" data-gallery-summary></p>
+
+        <div class="sliki-empty-state is-hidden" data-gallery-empty-state>
+            <h3>No images found</h3>
+            <p>Upload images first, or adjust the current filter.</p>
+        </div>
+
+        <section class="sliki-gallery__grid" data-gallery-grid aria-live="polite"></section>
+
+        <nav class="sliki-pagination is-hidden" aria-label="Gallery pages" data-gallery-pagination>
+            <button type="button" class="c-button c-button--secondary" data-gallery-prev>
+                <span class="button__label">Previous</span>
+            </button>
+            <span data-gallery-page-label></span>
+            <button type="button" class="c-button c-button--secondary" data-gallery-next>
+                <span class="button__label">Next</span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="sliki-lightbox is-hidden" data-gallery-lightbox>
+        <div class="sliki-lightbox__backdrop" data-gallery-lightbox-close></div>
+        <div class="sliki-lightbox__panel" role="dialog" aria-modal="true" aria-label="Image preview">
+            <div class="sliki-lightbox__header">
+                <div>
+                    <h3 data-gallery-lightbox-title></h3>
+                    <p data-gallery-lightbox-meta></p>
+                </div>
+                <button type="button" class="c-button c-button--secondary" data-gallery-lightbox-close>
+                    <span class="button__label">Close</span>
+                </button>
+            </div>
+            <img src="" alt="" class="sliki-lightbox__image" data-gallery-lightbox-image />
+        </div>
+    </div>
+
+    <noscript><p>JavaScript is required to browse the gallery.</p></noscript>
+</section>

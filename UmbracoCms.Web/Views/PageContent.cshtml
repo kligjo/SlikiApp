@@ -1,0 +1,15 @@
+﻿@inherits UmbracoViewPage<PageContent>
+
+<div class="o-container">
+	<div class="o-grid">
+		<div class="o-col-12 o-col-8--md u-push-2--md">
+			<vc:breadcrumb page="@Model"/>
+
+			<vc:title base-page="@Model" />
+			
+			<partial name="_BlockList" model="Model.ContentBlocks" />
+
+			<vc:social-sharing page="@Model" />
+		</div>
+	</div>
+</div>

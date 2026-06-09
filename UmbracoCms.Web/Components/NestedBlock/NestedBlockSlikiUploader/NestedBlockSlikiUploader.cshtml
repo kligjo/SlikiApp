@@ -1,0 +1,44 @@
+@model UmbracoCms.Web.Components.NestedBlock.SlikiUploaderBlockViewModel
+
+<section class="sliki-block sliki-uploader" data-sliki-uploader id="@Model.RootId" data-upload-url="@Model.UploadUrl" data-max-upload-bytes="@Model.MaxUploadBytes" data-accepted-mime-types="@Model.AcceptedMimeTypes">
+    <div class="sliki-block__header">
+        <div>
+            <h2>@Model.Title</h2>
+            <p>@Model.Introduction</p>
+        </div>
+    </div>
+
+    <div class="sliki-panel sliki-uploader__panel">
+        <div class="sliki-uploader__controls">
+            <label class="sliki-field__label" for="@($"{Model.RootId}-input")">Browse for images</label>
+            <input id="@($"{Model.RootId}-input")" class="sliki-field__input" type="file" multiple accept="@Model.AcceptedMimeTypes" data-upload-input />
+
+            <p class="sliki-caption">Accepted formats: JPEG, PNG, GIF, WebP, BMP. Maximum file size: <strong>@Model.MaxUploadDisplay</strong> per image.</p>
+
+            <div class="sliki-actions">
+                <button type="button" class="c-button" data-upload-action="upload-all">
+                    <span class="button__label">Upload all</span>
+                </button>
+                <button type="button" class="c-button c-button--secondary" data-upload-action="retry-failed">
+                    <span class="button__label">Retry failed</span>
+                </button>
+                <button type="button" class="c-button c-button--ghost" data-upload-action="clear-selection">
+                    <span class="button__label">Clear selection</span>
+                </button>
+            </div>
+
+            <div class="sliki-alert sliki-alert--success is-hidden" role="status" data-upload-status></div>
+        </div>
+
+        <div class="sliki-uploader__queue">
+            <div class="sliki-empty-state" data-upload-empty-state>
+                <h3>No files selected yet</h3>
+                <p>Use the file picker above to add one or more images for upload.</p>
+            </div>
+
+            <section class="sliki-upload-list is-hidden" data-upload-list aria-live="polite"></section>
+        </div>
+    </div>
+
+    <noscript><p>JavaScript is required for image uploads.</p></noscript>
+</section>
