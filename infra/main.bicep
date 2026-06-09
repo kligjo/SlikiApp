@@ -20,10 +20,10 @@ param environmentName string = 'dev'
 param containerName string = 'desklmphotos'
 
 @description('App Service plan SKU. Use F1 for Free (dev/test) or B1 for Basic.')
-param appServiceSkuName string = 'F1'
+param appServiceSkuName string = 'B1'
 
 @description('App Service plan tier. Use Free for dev/test or Basic for B1.')
-param appServiceSkuTier string = 'Free'
+param appServiceSkuTier string = 'Basic'
 
 @description('Linux runtime stack for the web app.')
 param linuxFxVersion string = 'DOTNETCORE|10.0'
@@ -133,7 +133,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: linuxFxVersion
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: false
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
