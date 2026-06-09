@@ -21,6 +21,15 @@
     <PackageReference Include="uSync" Version="17.0.4" />
   </ItemGroup>
 
+  <!-- These config/schema files must not be copied into a referencing project's
+       publish output — Sliki.Web owns its own copies and Azure App Settings
+       supply all runtime values. -->
+  <ItemGroup>
+    <Content Update="appsettings*.json" CopyToPublishDirectory="Never" />
+    <Content Update="appsettings-schema*.json" CopyToPublishDirectory="Never" />
+    <Content Update="umbraco-package-schema.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Update="Components\_ViewImports.cshtml" Visible="false" />
     <Folder Include="Api/Models/" />
