@@ -31,7 +31,6 @@ param sqlAdminPassword string
 
 var normalizedBaseName = toLower(replace(appBaseName, '-', ''))
 var uniqueSuffix = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, appBaseName, environmentName))
-var acrName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 50)
 var appServicePlanName = '${appBaseName}-${environmentName}-asp'
 var webAppName = '${appBaseName}-${environmentName}-app'
 var storageAccountName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24)
@@ -42,9 +41,6 @@ var sqlDatabaseName = '${appBaseName}-${environmentName}-db'
 var blobContributorRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
   'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-var acrPullRoleId = subscriptionResourceId(
-  'Microsoft.Authorization/roleDefinitions',
-  '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -98,20 +94,9 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: acrName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-  }
-}
-
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
-  location: location
+  location: sqlLocation
   kind: 'linux'
   sku: {
     name: 'B1'
@@ -124,7 +109,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
-  location: location
+  location: sqlLocation
   identity: {
     type: 'SystemAssigned'
   }
@@ -132,11 +117,10 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'DOCKER|mcr.microsoft.com/appsvc/staticsite:latest'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: true
       http20Enabled: true
       minTlsVersion: '1.2'
-      acrUseManagedIdentityCreds: true
       appSettings: [
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -170,26 +154,8 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
           value: 'Microsoft.Data.SqlClient'
         }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_URL'
-          value: 'https://${containerRegistry.properties.loginServer}'
-        }
-        {
-          name: 'WEBSITES_PORT'
-          value: '8080'
-        }
       ]
     }
-  }
-}
-
-resource acrPullAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, webApp.id, acrPullRoleId)
-  scope: containerRegistry
-  properties: {
-    principalId: webApp.identity.principalId
-    roleDefinitionId: acrPullRoleId
-    principalType: 'ServicePrincipal'
   }
 }
 
@@ -239,8 +205,6 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
 
 output webAppName string = webApp.name
 output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
-output acrLoginServer string = containerRegistry.properties.loginServer
-output acrName string = containerRegistry.name
 output storageAccountName string = storageAccount.name
 output blobContainerName string = imageContainer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
