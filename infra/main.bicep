@@ -22,15 +22,6 @@ param environmentName string = 'dev'
 @description('Blob container name used by the application.')
 param containerName string = 'desklmphotos'
 
-@description('Maximum upload size per file in bytes.')
-@minValue(1048576)
-param maxUploadBytes int = 10485760
-
-@description('Gallery page size.')
-@minValue(1)
-@maxValue(50)
-param pageSize int = 12
-
 @description('SQL Server administrator login name.')
 param sqlAdminLogin string = 'sqladmin'
 
@@ -84,7 +75,7 @@ resource imageContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
   }
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-09' = {
   name: workspaceName
   location: location
   properties: {
@@ -158,6 +149,22 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
         }
       ]
+    }
+    template: {
+      containers: [
+        {
+          name: normalizedBaseName
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 0
+        maxReplicas: 3
+      }
     }
   }
 }
