@@ -47,6 +47,8 @@ jobs:
       container_app_url: ${{ steps.deploy.outputs.container_app_url }}
       acr_login_server: ${{ steps.deploy.outputs.acr_login_server }}
       acr_name: ${{ steps.deploy.outputs.acr_name }}
+      app_insights_connection_string: ${{ steps.deploy.outputs.app_insights_connection_string }}
+      storage_endpoint: ${{ steps.deploy.outputs.storage_endpoint }}
 
     env:
       AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
@@ -101,11 +103,15 @@ jobs:
           container_app_url=$(python -c "import json,sys; print(json.load(sys.stdin)['containerAppUrl']['value'])" <<< "$deployment_outputs")
           acr_login_server=$(python -c "import json,sys; print(json.load(sys.stdin)['acrLoginServer']['value'])" <<< "$deployment_outputs")
           acr_name=$(python -c "import json,sys; print(json.load(sys.stdin)['acrName']['value'])" <<< "$deployment_outputs")
+          app_insights_connection_string=$(python -c "import json,sys; print(json.load(sys.stdin)['appInsightsConnectionString']['value'])" <<< "$deployment_outputs")
+          storage_endpoint=$(python -c "import json,sys; print(json.load(sys.stdin)['storageEndpoint']['value'])" <<< "$deployment_outputs")
 
           echo "container_app_name=$container_app_name" >> "$GITHUB_OUTPUT"
           echo "container_app_url=$container_app_url" >> "$GITHUB_OUTPUT"
           echo "acr_login_server=$acr_login_server" >> "$GITHUB_OUTPUT"
           echo "acr_name=$acr_name" >> "$GITHUB_OUTPUT"
+          echo "app_insights_connection_string=$app_insights_connection_string" >> "$GITHUB_OUTPUT"
+          echo "storage_endpoint=$storage_endpoint" >> "$GITHUB_OUTPUT"
 
   build_and_push:
     runs-on: ubuntu-latest
@@ -151,6 +157,8 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
       CONTAINER_APP_NAME: ${{ needs.deploy_infrastructure.outputs.container_app_name }}
       ACR_LOGIN_SERVER: ${{ needs.deploy_infrastructure.outputs.acr_login_server }}
+      APP_INSIGHTS_CONNECTION_STRING: ${{ needs.deploy_infrastructure.outputs.app_insights_connection_string }}
+      STORAGE_ENDPOINT: ${{ needs.deploy_infrastructure.outputs.storage_endpoint }}
 
     steps:
       - name: Azure login
@@ -166,4 +174,17 @@ jobs:
             --name "$CONTAINER_APP_NAME" \
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --image "$ACR_LOGIN_SERVER/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+            --min-replicas 1 \
+            --max-replicas 3 \
+            --cpu 1.0 \
+            --memory 2Gi \
+            --set-env-vars \
+              "APPLICATIONINSIGHTS_CONNECTION_STRING=$APP_INSIGHTS_CONNECTION_STRING" \
+              "ASPNETCORE_ENVIRONMENT=Production" \
+              "BlobStorage__ServiceUri=$STORAGE_ENDPOINT" \
+              "BlobStorage__ContainerName=desklmphotos" \
+              "BlobStorage__MaxUploadBytes=10485760" \
+              "BlobStorage__PageSize=12" \
+              "ConnectionStrings__umbracoDbDSN=secretref:db-connection-string" \
+              "ConnectionStrings__umbracoDbDSN_ProviderName=Microsoft.Data.SqlClient" \
             --output none

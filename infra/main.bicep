@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
 
-@description('Location override for Azure SQL (use a region that accepts SQL provisioning).')
+@description('Azure region for SQL resources (use a region that accepts SQL provisioning).')
 param sqlLocation string = 'austriaeast'
 
 @description('Short application base name used for generated resource names.')
@@ -159,56 +159,6 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
     }
-    template: {
-      containers: [
-        {
-          name: normalizedBaseName
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-          env: [
-            {
-              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-              value: applicationInsights.properties.ConnectionString
-            }
-            {
-              name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Production'
-            }
-            {
-              name: 'BlobStorage__ServiceUri'
-              value: storageAccount.properties.primaryEndpoints.blob
-            }
-            {
-              name: 'BlobStorage__ContainerName'
-              value: containerName
-            }
-            {
-              name: 'BlobStorage__MaxUploadBytes'
-              value: string(maxUploadBytes)
-            }
-            {
-              name: 'BlobStorage__PageSize'
-              value: string(pageSize)
-            }
-            {
-              name: 'ConnectionStrings__umbracoDbDSN'
-              secretRef: 'db-connection-string'
-            }
-            {
-              name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
-              value: 'Microsoft.Data.SqlClient'
-            }
-          ]
-          resources: {
-            cpu: json('1.0')
-            memory: '2Gi'
-          }
-        }
-      ]
-      scale: {
-        minReplicas: 0
-        maxReplicas: 3
-      }
-    }
   }
 }
 
@@ -274,3 +224,5 @@ output storageAccountName string = storageAccount.name
 output blobContainerName string = imageContainer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output sqlDatabaseName string = sqlDatabase.name
+output appInsightsConnectionString string = applicationInsights.properties.ConnectionString
+output storageEndpoint string = storageAccount.properties.primaryEndpoints.blob
