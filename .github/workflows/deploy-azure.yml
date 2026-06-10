@@ -144,3 +144,6 @@ jobs:
         with:
           app-name: ${{ env.WEB_APP_NAME }}
           package: ./publish
+          
+      - name: List publish output
+        run: ls -la ./publish
