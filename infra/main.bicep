@@ -96,7 +96,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
-  location: sqlLocation
+  location: 'austriaeast'
   kind: 'linux'
   sku: {
     name: 'B1'
@@ -109,7 +109,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
-  location: sqlLocation
+  location: 'austriaeast'
   identity: {
     type: 'SystemAssigned'
   }
@@ -154,6 +154,26 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
         {
           name: 'ConnectionStrings__umbracoDbDSN_ProviderName'
           value: 'Microsoft.Data.SqlClient'
+        }
+        {
+          name: 'WEBSITES_CONTAINER_START_TIME_LIMIT'
+          value: '600'
+        }
+        {
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'true'
+        }
+        {
+          name: 'HOME'
+          value: '/home'
+        }
+        {
+          name: 'UMBRACO__CMS__GLOBAL__MAINDOMLOCK__LOCKFILEPATH'
+          value: '/home/umbraco'
+        }
+        {
+          name: 'UMBRACO__CMS__GLOBAL__PATH'
+          value: '/home/umbraco'
         }
       ]
     }
