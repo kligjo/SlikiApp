@@ -3,6 +3,9 @@ targetScope = 'resourceGroup'
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
 
+@description('Location override for Azure SQL (use a region that accepts SQL provisioning).')
+param sqlLocation string = 'austriaeast'
+
 @description('Short application base name used for generated resource names.')
 @minLength(3)
 @maxLength(18)
@@ -231,7 +234,7 @@ resource blobContributorAssignment 'Microsoft.Authorization/roleAssignments@2022
 
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
-  location: location
+  location: sqlLocation
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
@@ -252,7 +255,7 @@ resource sqlFirewallAllowAzureServices 'Microsoft.Sql/servers/firewallRules@2023
 resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
   name: sqlDatabaseName
   parent: sqlServer
-  location: location
+  location: sqlLocation
   sku: {
     name: 'S0'
     tier: 'Standard'
