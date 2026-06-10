@@ -121,6 +121,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       alwaysOn: true
       http20Enabled: true
       minTlsVersion: '1.2'
+      appCommandLine: 'dotnet UmbracoCms.Web.dll'
       appSettings: [
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
