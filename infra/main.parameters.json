@@ -14,12 +14,6 @@
     "containerName": {
       "value": "desklmphotos"
     },
-    "maxUploadBytes": {
-      "value": 10485760
-    },
-    "pageSize": {
-      "value": 12
-    },
     "sqlAdminLogin": {
       "value": "sqladmin"
     }
