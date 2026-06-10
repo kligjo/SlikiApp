@@ -257,7 +257,9 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
     name: 'S0'
     tier: 'Standard'
   }
-    maxSizeBytes: 2147483648
+  properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 10737418240
   }
 }
 
