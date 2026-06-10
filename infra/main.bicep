@@ -75,7 +75,7 @@ resource imageContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
   }
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-09' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
   location: location
   properties: {
