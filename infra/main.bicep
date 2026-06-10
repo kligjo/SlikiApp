@@ -164,16 +164,16 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           value: 'true'
         }
         {
-          name: 'HOME'
-          value: '/home'
+          name: 'UMBRACO__CMS__GLOBAL__MAINDOMLOCK'
+          value: 'SqlMainDomLock'
         }
         {
-          name: 'UMBRACO__CMS__GLOBAL__MAINDOMLOCK__LOCKFILEPATH'
-          value: '/home/umbraco'
+          name: 'UMBRACO__CMS__HOSTING__LOCALTEMPSTORAGELOCATION'
+          value: 'EnvironmentTemp'
         }
         {
-          name: 'UMBRACO__CMS__GLOBAL__PATH'
-          value: '/home/umbraco'
+          name: 'UMBRACO__CMS__EXAMINE__LUCENEDIRECTORYFACTORY'
+          value: 'SyncedTempFileSystemDirectoryFactory'
         }
       ]
     }
