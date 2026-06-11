@@ -41,7 +41,7 @@ jobs:
         run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
       - name: Publish
-        run: dotnet publish UmbracoCms.Web/UmbracoCms.Web.csproj --configuration Release --output ./publish
+        run: dotnet publish SlikiApp.slnx --configuration Release --output ./publish
 
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
