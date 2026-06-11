@@ -32,7 +32,7 @@ param sqlAdminPassword string
 var normalizedBaseName = toLower(replace(appBaseName, '-', ''))
 var uniqueSuffix = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, appBaseName, environmentName))
 var appServicePlanName = '${appBaseName}-${environmentName}-asp'
-var webAppName = '${appBaseName}-${environmentName}-app'
+var webAppName = '${appBaseName}'
 var storageAccountName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24)
 var workspaceName = '${appBaseName}-${environmentName}-law'
 var appInsightsName = '${appBaseName}-${environmentName}-appi'
