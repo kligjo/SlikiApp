@@ -164,10 +164,6 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           value: 'true'
         }
         {
-          name: 'UMBRACO__CMS__GLOBAL__MAINDOMLOCK'
-          value: 'SqlMainDomLock'
-        }
-        {
           name: 'UMBRACO__CMS__HOSTING__LOCALTEMPSTORAGELOCATION'
           value: 'EnvironmentTemp'
         }
