@@ -18,11 +18,21 @@ try
 }
 catch (Exception ex)
 {
+    string msg = $"{DateTimeOffset.UtcNow:O}\n{ex}\n";
     Console.Error.WriteLine("========================================");
     Console.Error.WriteLine("FATAL: Unhandled startup exception:");
     Console.Error.WriteLine(ex.ToString());
     Console.Error.WriteLine("========================================");
     Console.Error.Flush();
+    try
+    {
+        string logDir = Path.Combine(
+            Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory,
+            "LogFiles", "Application");
+        Directory.CreateDirectory(logDir);
+        File.WriteAllText(Path.Combine(logDir, "startup-error.txt"), msg);
+    }
+    catch { /* best-effort */ }
     return 1;
 }
 
