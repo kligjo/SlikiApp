@@ -175,6 +175,10 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'Application__ServerRole'
           value: 'Single'
         }
+        {
+          name: 'UMBRACO__CMS__RUNTIME__MODE'
+          value: 'BackofficeDevelopment'
+        }
       ]
     }
   }
