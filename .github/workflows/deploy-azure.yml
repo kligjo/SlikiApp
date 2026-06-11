@@ -130,7 +130,12 @@ jobs:
           path: ./publish
 
       - name: Deploy to App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ env.WEB_APP_NAME }}
-          package: ./publish
+        run: |
+          cd ./publish
+          zip -r ../app.zip .
+          az webapp deploy \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ env.WEB_APP_NAME }}" \
+            --src-path ../app.zip \
+            --type zip \
+            --clean true
