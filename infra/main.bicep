@@ -171,6 +171,10 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'UMBRACO__CMS__EXAMINE__LUCENEDIRECTORYFACTORY'
           value: 'SyncedTempFileSystemDirectoryFactory'
         }
+        {
+          name: 'Application__ServerRole'
+          value: 'Single'
+        }
       ]
     }
   }
