@@ -16,14 +16,10 @@ concurrency:
 
 env:
   DOTNET_VERSION: 10.0.x
-  SOLUTION_PATH: SlikiApp.slnx
-  IMAGE_NAME: desklmphotos
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      publish_path: ${{ steps.publish.outputs.publish_path }}
 
     steps:
       - name: Check out repository
@@ -35,13 +31,17 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
+        run: dotnet restore SlikiApp.slnx
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+        run: dotnet build SlikiApp.slnx --configuration Release --no-restore
 
-      - name: Publish
-        run: dotnet publish SlikiApp.slnx --configuration Release --output ./publish
+      - name: Publish UmbracoCms.Web
+        run: dotnet publish UmbracoCms.Web/UmbracoCms.Web.csproj --configuration Release --no-build --output ./publish
+
+      - name: Copy Sliki.Web.dll into publish output
+        run: |
+          cp Sliki.Web/bin/Release/net10.0/Sliki.Web.dll ./publish/Sliki.Web.dll
 
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
@@ -144,6 +144,3 @@ jobs:
         with:
           app-name: ${{ env.WEB_APP_NAME }}
           package: ./publish
-          
-      - name: List publish output
-        run: ls -la ./publish
