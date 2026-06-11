@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="Sliki.Web/Sliki.Web.csproj" />
   <Project Path="UmbracoCms.Web/UmbracoCms.Web.csproj" />
 </Solution>
