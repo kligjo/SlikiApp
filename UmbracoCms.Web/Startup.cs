@@ -200,7 +200,8 @@ public static class Startup
                 builder.AddFrameAncestors().Self();
             })
             .AddFrameOptionsSameOrigin()
-        );
+            .AddContentTypeOptionsNoSniff()
+        );  
 
         app.UseCors();
         app.UseSharedAccessToken();
