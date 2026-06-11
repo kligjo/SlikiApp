@@ -30,14 +30,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore
-        run: dotnet restore SlikiApp.slnx
-
-      - name: Build
-        run: dotnet build SlikiApp.slnx --configuration Release --no-restore
-
       - name: Publish UmbracoCms.Web
-        run: dotnet publish UmbracoCms.Web/UmbracoCms.Web.csproj --configuration Release --no-build --output ./publish
+        run: dotnet publish UmbracoCms.Web/UmbracoCms.Web.csproj --configuration Release --output ./publish
 
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
