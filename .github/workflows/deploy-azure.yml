@@ -39,10 +39,6 @@ jobs:
       - name: Publish UmbracoCms.Web
         run: dotnet publish UmbracoCms.Web/UmbracoCms.Web.csproj --configuration Release --no-build --output ./publish
 
-      - name: Copy Sliki.Web.dll into publish output
-        run: |
-          cp Sliki.Web/bin/Release/net10.0/Sliki.Web.dll ./publish/Sliki.Web.dll
-
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
         with:
