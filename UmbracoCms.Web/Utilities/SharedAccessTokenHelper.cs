@@ -8,7 +8,7 @@ public static class SharedAccessTokenHelper
 {
     public static bool TryResolveRequestToken(HttpContext context, AccessTokenOptions options, out string token)
     {
-        token = context.Request.Query[options.QueryParameterName].ToString();
+        token = context.Request.Query[options.QueryParameterName].ToString() ?? "";
         if (!string.IsNullOrWhiteSpace(token))
         {
             return true;
@@ -29,7 +29,7 @@ public static class SharedAccessTokenHelper
         }
 
         token = AccessTokenUrlHelper.GetTokenFromQueryString(refererUri.Query, options.QueryParameterName) ?? string.Empty;
-        return !string.IsNullOrWhiteSpace(token);
+        return !string.IsNullOrEmpty(token);
     }
 
     public static bool TokensMatch(string actualToken, string expectedToken)

@@ -16,7 +16,7 @@
     <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" Version="1.3.1" />
     <PackageReference Include="Scrutor" Version="7.0.0" />
     <PackageReference Include="SimpleMvcSitemap.Core" Version="4.4.0" />
-    <PackageReference Include="Umbraco.Cms" Version="17.2.1" />
+    <PackageReference Include="Umbraco.Cms" Version="17.4.2" />
     <!-- TODO: Umbraco.Community.MediaColourFinder — no Umbraco 17 compatible version available yet (latest 1.0.2 targets Umbraco 10) -->
     <PackageReference Include="uSync" Version="17.0.4" />
   </ItemGroup>

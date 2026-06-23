@@ -21,6 +21,7 @@ using Microsoft.Extensions.Options;
 using Scrutor;
 using SimpleMvcSitemap;
 using Umbraco.Cms.Core.Configuration.Models;
+using Umbraco.Cms.Core.Net;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Sync;
 using Umbraco.Cms.Infrastructure.DependencyInjection;
@@ -168,10 +169,28 @@ public static class Startup
             .AddNotificationHandler<ContentCacheRefresherNotification, CacheFlushingNotificationHandler>()
             .AddNotificationHandler<MediaCacheRefresherNotification, CacheFlushingNotificationHandler>()
             .AddNotificationHandler<UmbracoApplicationStartedNotification, SlikiHomeContentNotificationHandler>()
+            .AddNotificationHandler<UmbracoApplicationStartedNotification, AuthPageContentNotificationHandler>()
             .SetServerRegistrar<ConfigurationServerRoleAccessor>()
             .SetContentLastChanceFinder<LastChanceContentFinder>()
             .SetDefaultRenderController<DefaultRenderController>()
             .Build();
+
+        // Session is still needed for Umbraco's internal features (e.g. preview mode).
+        services.AddDistributedMemoryCache();
+        services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromHours(8);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
+
+        // Override Umbraco's default ISessionIdResolver (AspNetCoreSessionManager) with a
+        // re-entrant-safe version. The default causes a stack overflow:
+        // HttpSessionIdEnricher fires on every log event → calls Session.Id →
+        // DistributedSession.Load() logs before setting its _loaded flag →
+        // triggers enricher again → infinite recursion.
+        services.AddSingleton<ISessionIdResolver, SafeSessionIdResolver>();
     }
 
     /// <summary>
@@ -204,6 +223,7 @@ public static class Startup
         );  
 
         app.UseCors();
+        app.UseSession();
         app.UseSharedAccessToken();
 
         // Status Code Pages
