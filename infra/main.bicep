@@ -37,11 +37,20 @@ param maxUploadBytes int = 10485760
 @maxValue(50)
 param pageSize int = 12
 
+@description('Override for the web app resource name.')
+param webAppNameOverride string = ''
+
+@description('Override for the App Service plan resource name.')
+param appServicePlanNameOverride string = ''
+
+@description('Override for the storage account resource name.')
+param storageAccountNameOverride string = ''
+
 var normalizedBaseName = toLower(replace(appBaseName, '-', ''))
 var uniqueSuffix = toLower(uniqueString(subscription().subscriptionId, resourceGroup().id, appBaseName, environmentName))
-var webAppName = take('${normalizedBaseName}-${environmentName}-${uniqueSuffix}', 60)
-var appServicePlanName = '${appBaseName}-${environmentName}-plan'
-var storageAccountName = take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24)
+var webAppName = empty(webAppNameOverride) ? take('${normalizedBaseName}-${environmentName}-${uniqueSuffix}', 60) : webAppNameOverride
+var appServicePlanName = empty(appServicePlanNameOverride) ? '${appBaseName}-${environmentName}-plan' : appServicePlanNameOverride
+var storageAccountName = empty(storageAccountNameOverride) ? take('${normalizedBaseName}${environmentName}${uniqueSuffix}', 24) : storageAccountNameOverride
 var workspaceName = '${appBaseName}-${environmentName}-law'
 var appInsightsName = '${appBaseName}-${environmentName}-appi'
 var blobContributorRoleId = subscriptionResourceId(

@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "location": {
-      "value": "westeurope"
+      "value": "austriaeast"
     },
     "appBaseName": {
       "value": "sliki"
@@ -28,6 +28,15 @@
     },
     "pageSize": {
       "value": 12
+    },
+    "webAppNameOverride": {
+      "value": "desklmphotos"
+    },
+    "appServicePlanNameOverride": {
+      "value": "desklmphotos-dev-asp"
+    },
+    "storageAccountNameOverride": {
+      "value": "slikidevjw7oc7g3tnkvi"
     }
   }
 }
