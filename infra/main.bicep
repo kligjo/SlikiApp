@@ -3,6 +3,12 @@ targetScope = 'resourceGroup'
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
 
+@description('Azure region for the storage account.')
+param storageLocation string = resourceGroup().location
+
+@description('Azure region for monitoring resources (Log Analytics, Application Insights).')
+param monitoringLocation string = resourceGroup().location
+
 @description('Short application base name used for generated resource names.')
 @minLength(3)
 @maxLength(18)
@@ -59,7 +65,7 @@ var blobContributorRoleId = subscriptionResourceId(
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
-  location: location
+  location: storageLocation
   sku: {
     name: 'Standard_LRS'
   }
@@ -88,7 +94,7 @@ resource imageContainer 'Microsoft.Storage/storageAccounts/blobServices/containe
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
-  location: location
+  location: monitoringLocation
   properties: {
     retentionInDays: 30
     sku: {
@@ -99,7 +105,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: appInsightsName
-  location: location
+  location: monitoringLocation
   kind: 'web'
   properties: {
     Application_Type: 'web'

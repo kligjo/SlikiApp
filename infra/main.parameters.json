@@ -5,6 +5,12 @@
     "location": {
       "value": "austriaeast"
     },
+    "storageLocation": {
+      "value": "westeurope"
+    },
+    "monitoringLocation": {
+      "value": "northeurope"
+    },
     "appBaseName": {
       "value": "sliki"
     },
