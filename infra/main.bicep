@@ -1,8 +1,5 @@
 targetScope = 'resourceGroup'
 
-@description('Azure region for all resources.')
-param location string = resourceGroup().location
-
 @description('Short application base name used for generated resource names.')
 @minLength(3)
 @maxLength(18)

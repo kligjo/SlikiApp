@@ -107,7 +107,6 @@ jobs:
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --template-file ./infra/main.bicep \
             --parameters @./infra/main.parameters.json \
-            --parameters location="$AZURE_LOCATION" \
             --query "properties.outputs" \
             --output json)
 
