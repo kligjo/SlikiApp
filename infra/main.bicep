@@ -131,6 +131,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
+      appCommandLine: 'dotnet Sliki.Web.dll'
       alwaysOn: true
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
