@@ -1,0 +1,160 @@
+{
+  "actions": [
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoBytes/Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoBytes/Description",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoBytes/Validation",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoBytes/RegEx",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoBytes/MandatoryMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoBytes/MandatoryMessage",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoBytes/ValidationRegExpMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoBytes/ValidationRegExpMessage",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoExtension/Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoExtension/Description",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoExtension/Validation",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoExtension/RegEx",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoExtension/MandatoryMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoExtension/MandatoryMessage",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoExtension/ValidationRegExpMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoExtension/ValidationRegExpMessage",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoFile/Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoFile/Description",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoFile/Validation",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoFile/RegEx",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoFile/MandatoryMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoFile/MandatoryMessage",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Property/umbracoFile/ValidationRegExpMessage",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "umbracoFile/ValidationRegExpMessage",
+          "success": true
+        },
+        {
+          "change": "Delete",
+          "name": "umbracoWidth",
+          "newValue": "",
+          "oldValue": "(Blank)",
+          "path": "Property/umbracoWidth",
+          "success": true
+        },
+        {
+          "change": "Delete",
+          "name": "umbracoHeight",
+          "newValue": "",
+          "oldValue": "(Blank)",
+          "path": "Property/umbracoHeight",
+          "success": true
+        }
+      ],
+      "handler": "MediaTypeHandler",
+      "itemType": "IMediaType",
+      "key": "c4b1efcf-a9d5-41c4-9621-e9d273b52a9c",
+      "message": "",
+      "name": "Vector Graphics (SVG)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "contentBlocks",
+          "newValue": "\u0022{\\u0022contentData\\u0022:[{\\u0022contentTypeKey\\u0022:\\u0022a0d84c5e-58d7-4a55-902a-56af0cd19bd2\\u0022,\\u0022key\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022values\\u0022:[{\\u0022alias\\u0022:\\u0022title\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022editorAlias\\u0022:null,\\u0022segment\\u0022:null,\\u0022value\\u0022:\\u0022Upload images to Sliki\\u0022},{\\u0022alias\\u0022:\\u0022introduction\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022editorAlias\\u0022:null,\\u0022segment\\u0022:null,\\u0022value\\u0022:\\u0022Select one or more supported images and send them to the private sliki blob container.\\u0022}]},{\\u0022contentTypeKey\\u0022:\\u0022c9b5ecfd-8c55-4f25-bba9-a1f7e28b6b70\\u0022,\\u0022key\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022values\\u0022:[{\\u0022alias\\u0022:\\u0022title\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022editorAlias\\u0022:null,\\u0022segment\\u0022:null,\\u0022value\\u0022:\\u0022Browse uploaded images\\u0022},{\\u0022alias\\u0022:\\u0022introduction\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022editorAlias\\u0022:null,\\u0022segment\\u0022:null,\\u0022value\\u0022:\\u0022Search, sort, preview, and page through every image currently stored in Sliki.\\u0022}]}],\\u0022settingsData\\u0022:[{\\u0022contentTypeKey\\u0022:\\u0022fecd61f2-eabe-438f-8cc0-5949254a80f6\\u0022,\\u0022key\\u0022:\\u0022b7c9602d-a86c-4060-9539-a0fcfb5b4df6\\u0022,\\u0022values\\u0022:[]},{\\u0022contentTypeKey\\u0022:\\u0022fecd61f2-eabe-438f-8cc0-5949254a80f6\\u0022,\\u0022key\\u0022:\\u002240ff58df-8cf6-41ef-bd2b-fb85b0724175\\u0022,\\u0022values\\u0022:[]}],\\u0022expose\\u0022:[{\\u0022contentKey\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null},{\\u0022contentKey\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null}],\\u0022layout\\u0022:{\\u0022Umbraco.BlockList\\u0022:[{\\u0022contentKey\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022contentUdi\\u0022:null,\\u0022settingsKey\\u0022:\\u0022b7c9602d-a86c-4060-9539-a0fcfb5b4df6\\u0022,\\u0022settingsUdi\\u0022:null},{\\u0022contentKey\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022contentUdi\\u0022:null,\\u0022settingsKey\\u0022:\\u002240ff58df-8cf6-41ef-bd2b-fb85b0724175\\u0022,\\u0022settingsUdi\\u0022:null}]}}\u0022",
+          "oldValue": "\u0022{\\u0022contentData\\u0022:[{\\u0022contentTypeKey\\u0022:\\u0022a0d84c5e-58d7-4a55-902a-56af0cd19bd2\\u0022,\\u0022key\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022values\\u0022:[{\\u0022editorAlias\\u0022:\\u0022Umbraco.TextBox\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null,\\u0022alias\\u0022:\\u0022title\\u0022,\\u0022value\\u0022:\\u0022Upload images to Sliki\\u0022},{\\u0022editorAlias\\u0022:\\u0022Umbraco.TextBox\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null,\\u0022alias\\u0022:\\u0022introduction\\u0022,\\u0022value\\u0022:\\u0022Select one or more supported images and send them to the private sliki blob container.\\u0022}]},{\\u0022contentTypeKey\\u0022:\\u0022c9b5ecfd-8c55-4f25-bba9-a1f7e28b6b70\\u0022,\\u0022key\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022values\\u0022:[{\\u0022editorAlias\\u0022:\\u0022Umbraco.TextBox\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null,\\u0022alias\\u0022:\\u0022title\\u0022,\\u0022value\\u0022:\\u0022Browse uploaded images\\u0022},{\\u0022editorAlias\\u0022:\\u0022Umbraco.TextBox\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null,\\u0022alias\\u0022:\\u0022introduction\\u0022,\\u0022value\\u0022:\\u0022Search, sort, preview, and page through every image currently stored in Sliki.\\u0022}]}],\\u0022settingsData\\u0022:[{\\u0022contentTypeKey\\u0022:\\u0022fecd61f2-eabe-438f-8cc0-5949254a80f6\\u0022,\\u0022key\\u0022:\\u0022b7c9602d-a86c-4060-9539-a0fcfb5b4df6\\u0022,\\u0022values\\u0022:[]},{\\u0022contentTypeKey\\u0022:\\u0022fecd61f2-eabe-438f-8cc0-5949254a80f6\\u0022,\\u0022key\\u0022:\\u002240ff58df-8cf6-41ef-bd2b-fb85b0724175\\u0022,\\u0022values\\u0022:[]}],\\u0022expose\\u0022:[{\\u0022contentKey\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null},{\\u0022contentKey\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022culture\\u0022:\\u0022en-US\\u0022,\\u0022segment\\u0022:null}],\\u0022Layout\\u0022:{\\u0022Umbraco.BlockList\\u0022:[{\\u0022contentUdi\\u0022:null,\\u0022settingsUdi\\u0022:null,\\u0022contentKey\\u0022:\\u00224e822bb7-2f5a-4c35-89a8-a94b7d996af5\\u0022,\\u0022settingsKey\\u0022:\\u0022b7c9602d-a86c-4060-9539-a0fcfb5b4df6\\u0022},{\\u0022contentUdi\\u0022:null,\\u0022settingsUdi\\u0022:null,\\u0022contentKey\\u0022:\\u0022c3b41f7b-fc8e-4d6f-aeff-74c50bb3bf2d\\u0022,\\u0022settingsKey\\u0022:\\u002240ff58df-8cf6-41ef-bd2b-fb85b0724175\\u0022}]}}\u0022",
+          "path": "Property/contentBlocks",
+          "success": true
+        }
+      ],
+      "handler": "ContentHandler",
+      "itemType": "IContent",
+      "key": "f1e9763c-446a-46cc-bd32-0548f499ceab",
+      "message": "Done",
+      "name": "Sliki",
+      "success": true
+    }
+  ],
+  "changes": 2,
+  "date": "2026-06-12T00:18:23.3282687+02:00",
+  "filePath": "",
+  "method": "Import",
+  "total": 114,
+  "username": "admin@localhost.com"
+}

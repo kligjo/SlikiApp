@@ -1,0 +1,20 @@
+{
+  "actions": [
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "ContentHandler",
+      "itemType": "IContent",
+      "key": "f1e9763c-446a-46cc-bd32-0548f499ceab",
+      "message": "Done",
+      "name": "Sliki",
+      "success": true
+    }
+  ],
+  "changes": 1,
+  "date": "2026-06-12T00:54:46.3930806+02:00",
+  "filePath": "",
+  "method": "Import",
+  "total": 3,
+  "username": "admin@localhost.com"
+}

@@ -1,7 +1,5 @@
 using Azure.Identity;
 using Azure.Storage.Blobs;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Net.Http.Headers;
 using Sliki.Web.Components;
 using Sliki.Web.Models;
@@ -11,27 +9,16 @@ using Sliki.Web.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services
-    .AddOptions<AccessTokenOptions>()
-    .Bind(builder.Configuration.GetSection(AccessTokenOptions.SectionName))
-    .Validate(
-        options => !string.IsNullOrWhiteSpace(options.QueryParameterName),
-        "AccessToken:QueryParameterName is required.")
-    .Validate(
-        options => !string.IsNullOrWhiteSpace(options.SharedToken),
-        "AccessToken:SharedToken is required.")
-    .ValidateOnStart();
 
 builder.Services
     .AddOptions<BlobStorageOptions>()
     .Bind(builder.Configuration.GetSection(BlobStorageOptions.SectionName))
     .Validate(
-        options => Uri.TryCreate(options.ServiceUri, UriKind.Absolute, out _),
-        "BlobStorage:ServiceUri must be a valid absolute URI.")
+        options => !string.IsNullOrWhiteSpace(options.ConnectionString)
+            || Uri.TryCreate(options.ServiceUri, UriKind.Absolute, out _),
+        "BlobStorage:ConnectionString or BlobStorage:ServiceUri must be configured.")
     .Validate(
         options => !string.IsNullOrWhiteSpace(options.ContainerName),
         "BlobStorage:ContainerName is required.")
@@ -46,41 +33,23 @@ builder.Services
 builder.Services.AddSingleton(sp =>
 {
     var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BlobStorageOptions>>().Value;
-    return new BlobServiceClient(new Uri(options.ServiceUri), new DefaultAzureCredential());
+    return !string.IsNullOrWhiteSpace(options.ConnectionString)
+        ? new BlobServiceClient(options.ConnectionString)
+        : new BlobServiceClient(new Uri(options.ServiceUri), new DefaultAzureCredential());
 });
 builder.Services.AddSingleton<ImageFileValidator>();
 builder.Services.AddSingleton<IImageStorageService, AzureBlobImageStorageService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-var accessTokenOptions = app.Services
-    .GetRequiredService<Microsoft.Extensions.Options.IOptions<AccessTokenOptions>>()
-    .Value;
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
-
-app.Use(
-    async (context, next) =>
-    {
-        if (!TryResolveRequestToken(context, accessTokenOptions, out var requestToken)
-            || !TokensMatch(requestToken, accessTokenOptions.SharedToken))
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("Unauthorized");
-            return;
-        }
-
-        await next();
-    });
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
@@ -169,38 +138,3 @@ app.MapPost(
     .DisableAntiforgery();
 
 app.Run();
-
-static bool TryResolveRequestToken(HttpContext context, AccessTokenOptions options, out string token)
-{
-    token = context.Request.Query[options.QueryParameterName].ToString();
-    if (!string.IsNullOrWhiteSpace(token))
-    {
-        return true;
-    }
-
-    var refererHeader = context.Request.Headers.Referer.ToString();
-    if (string.IsNullOrWhiteSpace(refererHeader)
-        || !Uri.TryCreate(refererHeader, UriKind.Absolute, out var refererUri))
-    {
-        return false;
-    }
-
-    if (!string.Equals(refererUri.Host, context.Request.Host.Host, StringComparison.OrdinalIgnoreCase)
-        || refererUri.Port != context.Request.Host.Port.GetValueOrDefault(refererUri.Port)
-        || !string.Equals(refererUri.Scheme, context.Request.Scheme, StringComparison.OrdinalIgnoreCase))
-    {
-        return false;
-    }
-
-    token = AccessTokenUrlHelper.GetTokenFromQueryString(refererUri.Query, options.QueryParameterName) ?? string.Empty;
-    return !string.IsNullOrWhiteSpace(token);
-}
-
-static bool TokensMatch(string actualToken, string expectedToken)
-{
-    var actualBytes = Encoding.UTF8.GetBytes(actualToken);
-    var expectedBytes = Encoding.UTF8.GetBytes(expectedToken);
-
-    return actualBytes.Length == expectedBytes.Length
-        && CryptographicOperations.FixedTimeEquals(actualBytes, expectedBytes);
-}

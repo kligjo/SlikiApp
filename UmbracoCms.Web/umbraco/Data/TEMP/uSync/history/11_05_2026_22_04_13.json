@@ -1,0 +1,1382 @@
+{
+  "actions": [
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "0225af17-b302-49cb-9176-b9f35cab9c17",
+      "message": "",
+      "name": "Approved Color",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "1e9b6e7f-d365-40a9-b2c2-ffe9582e0bbd",
+      "message": "",
+      "name": "Block List - 2 Column",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "3fe7e7e2-9ea4-440a-b6df-7f8e942c6c16",
+      "message": "",
+      "name": "Block List - Content",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "d78ee0b9-0e5c-49e2-97b4-bc8981639769",
+      "message": "",
+      "name": "Block List - Cookie Options",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "d3413462-0753-4da9-a488-3d6487b2133f",
+      "message": "",
+      "name": "Block List - Links",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "1f2a6897-7bec-4a64-a172-14a9dd3a9d45",
+      "message": "",
+      "name": "Block List - Video Block",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "e224862c-99d5-4557-b2d3-55ed81e0e899",
+      "message": "",
+      "name": "Block List - Video CMS Sources",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "efad51d8-1690-4623-94ab-c5677ba03618",
+      "message": "",
+      "name": "Block List - Video Url Sources",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "b3dc71d8-a3b8-434b-9f61-b1ed0246908a",
+      "message": "",
+      "name": "Checkbox list - Share socials",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "fbaf13a8-4036-41f2-93a3-974f678c312a",
+      "message": "",
+      "name": "Checkbox list",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "fd1e0da5-5606-4862-b679-5d0cf3a52a59",
+      "message": "",
+      "name": "Content Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "e4d66c0f-b935-4200-81f0-025f7256b89a",
+      "message": "",
+      "name": "Date Picker with time",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "5046194e-4237-453c-a547-15db3a07c4e1",
+      "message": "",
+      "name": "Date Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "cb9b6a49-a32c-4c27-a71e-e537c7de357d",
+      "message": "",
+      "name": "Dropdown Mailing",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "f38f0ac7-1d27-439c-9f3f-089cd8825a53",
+      "message": "",
+      "name": "Dropdown multiple",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "bacef150-93f2-48e6-a71e-7aa0c3593163",
+      "message": "",
+      "name": "Dropdown Video Platform",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "057e9fe1-9da4-475f-b61b-dac649222bb8",
+      "message": "",
+      "name": "Dropdown - Video Source Size",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "0b6a45e7-44ba-430d-9da5-4e46060b9e03",
+      "message": "",
+      "name": "Dropdown",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "e084d03b-6897-444b-8be7-c16595693f70",
+      "message": "",
+      "name": "Email Template Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "f5150b7a-a6d6-4e4f-b41f-40127b46f3ac",
+      "message": "",
+      "name": "Eye Dropper Color Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "1df9f033-e6d4-451f-b8d2-e0cbc50a836f",
+      "message": "",
+      "name": "Image Cropper",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "ad9f0cf2-bda2-45d5-9ea1-a63cfc873fd3",
+      "message": "",
+      "name": "Image Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "96cf9f78-580e-40a1-90fb-7b9d2c5d1966",
+      "message": "",
+      "name": "Image Picker (card)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "b5f7e609-8235-4f6a-beb5-a10dbf58173b",
+      "message": "",
+      "name": "Image Picker (default)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "918dfbfe-d233-4714-92ec-2bfd87eef6ac",
+      "message": "",
+      "name": "Image Picker (wysiwyg)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "930861bf-e262-4ead-a704-f99453565708",
+      "message": "",
+      "name": "Label (bigint)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "0e9794eb-f9b5-4f20-a788-93acd233a7e4",
+      "message": "",
+      "name": "Label (datetime)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "8f1ef1e1-9de4-40d3-a072-6673f631ca64",
+      "message": "",
+      "name": "Label (decimal)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "8e7f995c-bd81-4627-9932-c40e568ec788",
+      "message": "",
+      "name": "Label (integer)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "f0bc4bfb-b499-40d6-ba86-058885a5178c",
+      "message": "",
+      "name": "Label (string)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "a97cec69-9b71-4c30-8b12-ec398860d7e8",
+      "message": "",
+      "name": "Label (time)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "c0808dd3-8133-4e4b-8ce8-e2bea84a96a4",
+      "message": "",
+      "name": "List View - Content",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "3a0156c4-3b8c-4803-bdc1-6871faa83fff",
+      "message": "",
+      "name": "List View - Media",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "aa2c52a0-ce87-4e65-a47c-7df09358585d",
+      "message": "",
+      "name": "List View - Members",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "EditorAlias",
+          "newValue": "Umbraco.MediaPicker",
+          "oldValue": "Umbraco.MediaPicker3",
+          "path": "EditorAlias",
+          "success": true
+        }
+      ],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "135d60e0-64d9-49ed-ab08-893c9ba44ae5",
+      "message": "",
+      "name": "Media Picker (legacy)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "4309a3ea-0d78-4329-a06c-c80b036af19a",
+      "message": "",
+      "name": "Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "1ea2e01f-ebd8-4ce1-8d71-6b1149e63548",
+      "message": "",
+      "name": "Member Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "b4e3535a-1753-47e2-8568-602cf8cfee6f",
+      "message": "",
+      "name": "Multi URL Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "2f1689bd-2e42-458a-8066-f77d0c6f0d8f",
+      "message": "",
+      "name": "Multinode Treepicker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "0e63d883-b62b-4799-88c3-157f82e83ecc",
+      "message": "",
+      "name": "Multiple Image Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "EditorAlias",
+          "newValue": "Umbraco.MediaPicker",
+          "oldValue": "Umbraco.MediaPicker3",
+          "path": "EditorAlias",
+          "success": true
+        }
+      ],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "9dbbcbbb-2327-434a-b355-af1b84e5010a",
+      "message": "",
+      "name": "Multiple Media Picker (legacy)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "1b661f40-2242-4b44-b9cb-3990ee2b13c0",
+      "message": "",
+      "name": "Multiple Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "3702a99f-8d0e-44bd-9bc4-c4f38de12caf",
+      "message": "",
+      "name": "Multiple SVG Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "2e6d3631-066e-44b8-aec4-96f09099b2b5",
+      "message": "",
+      "name": "Numeric",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "bb5f57c9-ce2b-4bb9-b697-4caca783a805",
+      "message": "",
+      "name": "Radiobox",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "EditorAlias",
+          "newValue": "Umbraco.TinyMCE",
+          "oldValue": "Umbraco.RichText",
+          "path": "EditorAlias",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Data",
+          "newValue": "{\r\n  \u0022blocks\u0022: null,\r\n  \u0022extensions\u0022: [\r\n    \u0022Umb.Tiptap.RichTextEssentials\u0022,\r\n    \u0022Umb.Tiptap.Anchor\u0022,\r\n    \u0022Umb.Tiptap.Blockquote\u0022,\r\n    \u0022Umb.Tiptap.Bold\u0022,\r\n    \u0022Umb.Tiptap.BulletList\u0022,\r\n    \u0022Umb.Tiptap.CodeBlock\u0022,\r\n    \u0022Umb.Tiptap.Embed\u0022,\r\n    \u0022Umb.Tiptap.Figure\u0022,\r\n    \u0022Umb.Tiptap.Heading\u0022,\r\n    \u0022Umb.Tiptap.HorizontalRule\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeClass\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeDataset\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeId\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeStyle\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagDiv\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagSpan\u0022,\r\n    \u0022Umb.Tiptap.Image\u0022,\r\n    \u0022Umb.Tiptap.Italic\u0022,\r\n    \u0022Umb.Tiptap.Link\u0022,\r\n    \u0022Umb.Tiptap.MediaUpload\u0022,\r\n    \u0022Umb.Tiptap.OrderedList\u0022,\r\n    \u0022Umb.Tiptap.Strike\u0022,\r\n    \u0022Umb.Tiptap.Subscript\u0022,\r\n    \u0022Umb.Tiptap.Superscript\u0022,\r\n    \u0022Umb.Tiptap.Table\u0022,\r\n    \u0022Umb.Tiptap.TextAlign\u0022,\r\n    \u0022Umb.Tiptap.TextDirection\u0022,\r\n    \u0022Umb.Tiptap.TextIndent\u0022,\r\n    \u0022Umb.Tiptap.TrailingNode\u0022,\r\n    \u0022Umb.Tiptap.Underline\u0022,\r\n    \u0022Umb.Tiptap.WordCount\u0022\r\n  ],\r\n  \u0022ignoreUserStartNodes\u0022: false,\r\n  \u0022maxImageSize\u0022: 500,\r\n  \u0022mediaParentId\u0022: null,\r\n  \u0022overlaySize\u0022: \u0022small\u0022,\r\n  \u0022stylesheets\u0022: [\r\n    \u0022/css/RTE.css\u0022\r\n  ],\r\n  \u0022toolbar\u0022: [\r\n    [\r\n      []\r\n    ]\r\n  ],\r\n  \u0022useLiveEditing\u0022: false\r\n}",
+          "oldValue": "{\r\n  \u0022blocks\u0022: null,\r\n  \u0022extensions\u0022: [\r\n    \u0022Umb.Tiptap.RichTextEssentials\u0022,\r\n    \u0022Umb.Tiptap.Anchor\u0022,\r\n    \u0022Umb.Tiptap.Blockquote\u0022,\r\n    \u0022Umb.Tiptap.Bold\u0022,\r\n    \u0022Umb.Tiptap.BulletList\u0022,\r\n    \u0022Umb.Tiptap.CodeBlock\u0022,\r\n    \u0022Umb.Tiptap.Embed\u0022,\r\n    \u0022Umb.Tiptap.Figure\u0022,\r\n    \u0022Umb.Tiptap.Heading\u0022,\r\n    \u0022Umb.Tiptap.HorizontalRule\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeClass\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeDataset\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeId\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeStyle\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagDiv\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagSpan\u0022,\r\n    \u0022Umb.Tiptap.Image\u0022,\r\n    \u0022Umb.Tiptap.Italic\u0022,\r\n    \u0022Umb.Tiptap.Link\u0022,\r\n    \u0022Umb.Tiptap.MediaUpload\u0022,\r\n    \u0022Umb.Tiptap.OrderedList\u0022,\r\n    \u0022Umb.Tiptap.Strike\u0022,\r\n    \u0022Umb.Tiptap.Subscript\u0022,\r\n    \u0022Umb.Tiptap.Superscript\u0022,\r\n    \u0022Umb.Tiptap.Table\u0022,\r\n    \u0022Umb.Tiptap.TextAlign\u0022,\r\n    \u0022Umb.Tiptap.TextDirection\u0022,\r\n    \u0022Umb.Tiptap.TextIndent\u0022,\r\n    \u0022Umb.Tiptap.TrailingNode\u0022,\r\n    \u0022Umb.Tiptap.Underline\u0022,\r\n    \u0022Umb.Tiptap.WordCount\u0022\r\n  ],\r\n  \u0022ignoreUserStartNodes\u0022: false,\r\n  \u0022maxImageSize\u0022: 500,\r\n  \u0022mediaParentId\u0022: null,\r\n  \u0022overlaySize\u0022: \u0022small\u0022,\r\n  \u0022stylesheets\u0022: [\r\n    \u0022/css/RTE.css\u0022\r\n  ],\r\n  \u0022toolbar\u0022: null,\r\n  \u0022useLiveEditing\u0022: false\r\n}",
+          "path": "Configuration Data",
+          "success": true
+        }
+      ],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "ca90c950-0aff-4e72-b976-a30b1ac57dad",
+      "message": "",
+      "name": "Richtext editor",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "EditorAlias",
+          "newValue": "Umbraco.TinyMCE",
+          "oldValue": "Umbraco.RichText",
+          "path": "EditorAlias",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Data",
+          "newValue": "{\r\n  \u0022blocks\u0022: null,\r\n  \u0022extensions\u0022: [\r\n    \u0022Umb.Tiptap.RichTextEssentials\u0022,\r\n    \u0022Umb.Tiptap.Anchor\u0022,\r\n    \u0022Umb.Tiptap.Blockquote\u0022,\r\n    \u0022Umb.Tiptap.Bold\u0022,\r\n    \u0022Umb.Tiptap.BulletList\u0022,\r\n    \u0022Umb.Tiptap.CodeBlock\u0022,\r\n    \u0022Umb.Tiptap.Embed\u0022,\r\n    \u0022Umb.Tiptap.Figure\u0022,\r\n    \u0022Umb.Tiptap.Heading\u0022,\r\n    \u0022Umb.Tiptap.HorizontalRule\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeClass\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeDataset\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeId\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeStyle\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagDiv\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagSpan\u0022,\r\n    \u0022Umb.Tiptap.Image\u0022,\r\n    \u0022Umb.Tiptap.Italic\u0022,\r\n    \u0022Umb.Tiptap.Link\u0022,\r\n    \u0022Umb.Tiptap.MediaUpload\u0022,\r\n    \u0022Umb.Tiptap.OrderedList\u0022,\r\n    \u0022Umb.Tiptap.Strike\u0022,\r\n    \u0022Umb.Tiptap.Subscript\u0022,\r\n    \u0022Umb.Tiptap.Superscript\u0022,\r\n    \u0022Umb.Tiptap.Table\u0022,\r\n    \u0022Umb.Tiptap.TextAlign\u0022,\r\n    \u0022Umb.Tiptap.TextDirection\u0022,\r\n    \u0022Umb.Tiptap.TextIndent\u0022,\r\n    \u0022Umb.Tiptap.TrailingNode\u0022,\r\n    \u0022Umb.Tiptap.Underline\u0022,\r\n    \u0022Umb.Tiptap.WordCount\u0022\r\n  ],\r\n  \u0022ignoreUserStartNodes\u0022: false,\r\n  \u0022maxImageSize\u0022: 500,\r\n  \u0022mediaParentId\u0022: null,\r\n  \u0022overlaySize\u0022: \u0022small\u0022,\r\n  \u0022overlayWidthSize\u0022: \u0022small\u0022,\r\n  \u0022stylesheets\u0022: null,\r\n  \u0022toolbar\u0022: [\r\n    [\r\n      []\r\n    ]\r\n  ],\r\n  \u0022useLiveEditing\u0022: false\r\n}",
+          "oldValue": "{\r\n  \u0022blocks\u0022: null,\r\n  \u0022extensions\u0022: [\r\n    \u0022Umb.Tiptap.RichTextEssentials\u0022,\r\n    \u0022Umb.Tiptap.Anchor\u0022,\r\n    \u0022Umb.Tiptap.Blockquote\u0022,\r\n    \u0022Umb.Tiptap.Bold\u0022,\r\n    \u0022Umb.Tiptap.BulletList\u0022,\r\n    \u0022Umb.Tiptap.CodeBlock\u0022,\r\n    \u0022Umb.Tiptap.Embed\u0022,\r\n    \u0022Umb.Tiptap.Figure\u0022,\r\n    \u0022Umb.Tiptap.Heading\u0022,\r\n    \u0022Umb.Tiptap.HorizontalRule\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeClass\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeDataset\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeId\u0022,\r\n    \u0022Umb.Tiptap.HtmlAttributeStyle\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagDiv\u0022,\r\n    \u0022Umb.Tiptap.HtmlTagSpan\u0022,\r\n    \u0022Umb.Tiptap.Image\u0022,\r\n    \u0022Umb.Tiptap.Italic\u0022,\r\n    \u0022Umb.Tiptap.Link\u0022,\r\n    \u0022Umb.Tiptap.MediaUpload\u0022,\r\n    \u0022Umb.Tiptap.OrderedList\u0022,\r\n    \u0022Umb.Tiptap.Strike\u0022,\r\n    \u0022Umb.Tiptap.Subscript\u0022,\r\n    \u0022Umb.Tiptap.Superscript\u0022,\r\n    \u0022Umb.Tiptap.Table\u0022,\r\n    \u0022Umb.Tiptap.TextAlign\u0022,\r\n    \u0022Umb.Tiptap.TextDirection\u0022,\r\n    \u0022Umb.Tiptap.TextIndent\u0022,\r\n    \u0022Umb.Tiptap.TrailingNode\u0022,\r\n    \u0022Umb.Tiptap.Underline\u0022,\r\n    \u0022Umb.Tiptap.WordCount\u0022\r\n  ],\r\n  \u0022ignoreUserStartNodes\u0022: false,\r\n  \u0022maxImageSize\u0022: 500,\r\n  \u0022mediaParentId\u0022: null,\r\n  \u0022overlaySize\u0022: \u0022small\u0022,\r\n  \u0022overlayWidthSize\u0022: \u0022small\u0022,\r\n  \u0022stylesheets\u0022: null,\r\n  \u0022toolbar\u0022: null,\r\n  \u0022useLiveEditing\u0022: false\r\n}",
+          "path": "Configuration Data",
+          "success": true
+        }
+      ],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "354236bc-300e-4bd4-bf32-41114ba53005",
+      "message": "",
+      "name": "Simple Rich Text Editor",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "21755d9d-a8f9-43aa-917c-b2f79e90d9be",
+      "message": "",
+      "name": "Single URL Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "c74ce4f3-e602-4f2f-b7df-3ef2c008f0f5",
+      "message": "",
+      "name": "SVG Media Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "b6b73142-b9c1-4bf8-a16d-e1c23320b549",
+      "message": "",
+      "name": "Tags",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "ef5092e9-8f84-409a-8537-808bd4aa916e",
+      "message": "",
+      "name": "Textarea (max. 320)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "c6bac0dd-4ab9-45b1-8e30-e4b619ee5da3",
+      "message": "",
+      "name": "Textarea",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "aea5d212-3415-4a2e-a448-d6b25a5384a1",
+      "message": "",
+      "name": "Textstring (max. 100)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "0cc0eba1-9960-42c9-bf9b-60e150b429ae",
+      "message": "",
+      "name": "Textstring",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "92897bc6-a5f3-4ffe-ae27-f2e7e33dda49",
+      "message": "",
+      "name": "True/false",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "bc1e266c-dac4-4164-bf08-8a1ec6a7143d",
+      "message": "",
+      "name": "Upload Article",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "8f430dd6-4e96-447e-9dc0-cb552c8cd1f3",
+      "message": "",
+      "name": "Upload Audio",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "84c6b441-31df-4ffe-b67e-67d5bc3ae65a",
+      "message": "",
+      "name": "Upload File",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "215cb418-2153-4429-9aef-8c0f0041191b",
+      "message": "",
+      "name": "Upload Vector Graphics",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "70575fe7-9812-4396-bbe1-c81a76db71b5",
+      "message": "",
+      "name": "Upload Video",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "DataTypeHandler",
+      "itemType": "IDataType",
+      "key": "2a5188a6-bf03-4b72-b4c4-4aa5f8e76a4b",
+      "message": "",
+      "name": "Video Picker",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "ddbb8b58-9a31-41b3-a01e-3e7f522b4e20",
+      "message": "",
+      "name": "Composition Analytics",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "a3bab691-c534-487e-9d3d-39bee9369c13",
+      "message": "",
+      "name": "Composition BasePage",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "d1a4e000-2893-4031-966b-e1cc6cad1760",
+      "message": "",
+      "name": "Composition Content Blocks",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "453d76f8-be2f-4aa9-989c-561cffb5f4ef",
+      "message": "",
+      "name": "Composition Cookie Bar",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "0f4e2912-edda-426a-bde5-ab8ccdf23767",
+      "message": "",
+      "name": "Composition Cookies Options",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "7e2fa5d4-38d2-4c77-af76-c25a5cac06f0",
+      "message": "",
+      "name": "Composition Error Handling",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "2172f92b-11c9-48a7-95cd-ca0a750fba75",
+      "message": "",
+      "name": "Composition Footer",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "90e0f3b6-75f9-4de1-baf0-0b75932016b5",
+      "message": "",
+      "name": "Composition Hero",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "0cdfd20a-4635-438f-a855-03ef35558899",
+      "message": "",
+      "name": "Composition Redirects",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "6b59155c-88ff-4b9e-8b97-e87f6053ec53",
+      "message": "",
+      "name": "Composition SEO",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "1c868947-4c96-422f-9103-a88ba5f28c0b",
+      "message": "",
+      "name": "Composition SEO Settings",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "14d0c172-1396-45da-b7c3-317506c8c821",
+      "message": "",
+      "name": "Composition Social Links",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "d5e2422c-7cd9-4537-a2e7-d98841895b8c",
+      "message": "",
+      "name": "Composition Social Sharing",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "6615c23d-b6bd-485d-838a-df539d914911",
+      "message": "",
+      "name": "Composition Social Sharing Options",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "a5169344-5e82-40b7-b28b-0589f2be072d",
+      "message": "",
+      "name": "Composition Structured Data",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "c3a49b1e-faea-4f02-89ff-5b6b2dd7488a",
+      "message": "",
+      "name": "Content Folder",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "fecd61f2-eabe-438f-8cc0-5949254a80f6",
+      "message": "",
+      "name": "Default Component Settings",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "277e3f8a-21af-4d83-8af7-e53ec5cb171a",
+      "message": "",
+      "name": "Nested Block 2 Column",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "6442046f-45cd-49bb-ba92-15a843ec1f3d",
+      "message": "",
+      "name": "Nested Block Cookie Option",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "8681ee8c-079a-4d70-8dbd-d90a5018488e",
+      "message": "",
+      "name": "Nested Block Image",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "b8ea01e8-f7c2-4be2-aeb3-6464a64fbed6",
+      "message": "",
+      "name": "Nested Block Links",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "c9b5ecfd-8c55-4f25-bba9-a1f7e28b6b70",
+      "message": "",
+      "name": "Nested Block Sliki Gallery",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "a0d84c5e-58d7-4a55-902a-56af0cd19bd2",
+      "message": "",
+      "name": "Nested Block Sliki Uploader",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "6964dbc8-d0ed-4bde-9ea3-9a01b126f811",
+      "message": "",
+      "name": "Nested Block Text",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "cbdd4a8d-d91b-4309-b3f1-24da84668368",
+      "message": "",
+      "name": "Nested Block Video",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "2e23e248-1ede-4ae9-b763-914d1d39eb2a",
+      "message": "",
+      "name": "Video - Native (CMS)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "dcb4d3db-d942-4b0a-96f9-899c941de27a",
+      "message": "",
+      "name": "Video - Native (Url)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "8461d3ad-282f-4733-9f8d-6c675373f56c",
+      "message": "",
+      "name": "Video - Vimeo",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "9e1aa5ef-e675-4b59-a91f-c5fcd4c18db1",
+      "message": "",
+      "name": "Video - YouTube",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "8ca1e79d-6971-4ed8-8104-b4e1ed6e41d4",
+      "message": "",
+      "name": "Video - Source (CMS)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "737d7cee-e64f-475b-8fac-662e1d0c934d",
+      "message": "",
+      "name": "Video - Source (Url)",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "ebb770c0-730e-436b-ba79-24fa6ba9b464",
+      "message": "",
+      "name": "Page Cookies",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "61ddfd15-847f-4fd7-b40d-109e54a9b4ac",
+      "message": "",
+      "name": "Page Content",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "4ebcbca7-709b-4be5-bdde-ab55fe0371ed",
+      "message": "",
+      "name": "Site Settings",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Allowed",
+          "newValue": "siteSettings",
+          "oldValue": "siteSettings",
+          "path": "/Structure",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "b29d1a49-97ce-4c04-89a0-8c642eeda6b7",
+      "message": "",
+      "name": "Data Folder",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [
+        {
+          "change": "Update",
+          "name": "Description",
+          "newValue": "(Blank)",
+          "oldValue": "(None)",
+          "path": "",
+          "success": true
+        },
+        {
+          "change": "Update",
+          "name": "Allowed",
+          "newValue": "pageContent::dataFolder::pageCookies::contentFolder",
+          "oldValue": "contentFolder::dataFolder::pageCookies::pageContent",
+          "path": "/Structure",
+          "success": true
+        }
+      ],
+      "handler": "ContentTypeHandler",
+      "itemType": "IContentType",
+      "key": "bb9c8447-fed6-4abc-9a05-138acd95d7b0",
+      "message": "",
+      "name": "Page Home",
+      "success": true
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "ContentHandler",
+      "itemType": "IContent",
+      "key": "f1e9763c-446a-46cc-bd32-0548f499ceab",
+      "message": "Done",
+      "name": "Test Page",
+      "success": true
+    }
+  ],
+  "changes": 98,
+  "date": "2026-05-11T22:04:13.4570167+02:00",
+  "filePath": "",
+  "method": "Import",
+  "total": 114,
+  "username": "admin@localhost.com"
+}

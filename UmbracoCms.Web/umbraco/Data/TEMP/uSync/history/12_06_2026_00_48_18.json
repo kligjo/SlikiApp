@@ -1,0 +1,30 @@
+{
+  "actions": [
+    {
+      "change": "Fail",
+      "details": [],
+      "handler": "ContentHandler",
+      "itemType": "IContent",
+      "key": "00000000-0000-0000-0000-000000000000",
+      "message": "ContentHandler Import Fail: One or more errors occurred. (One or more errors occurred. (Execution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.\r\nOperation cancelled by user.\r\nThe statement has been terminated.))",
+      "name": "home.config",
+      "success": false
+    },
+    {
+      "change": "Import",
+      "details": [],
+      "handler": "ContentHandler",
+      "itemType": "IContent",
+      "key": "f1e9763c-446a-46cc-bd32-0548f499ceab",
+      "message": "Done",
+      "name": "Sliki",
+      "success": true
+    }
+  ],
+  "changes": 2,
+  "date": "2026-06-12T00:48:18.2872452+02:00",
+  "filePath": "",
+  "method": "Import",
+  "total": 115,
+  "username": "admin@localhost.com"
+}

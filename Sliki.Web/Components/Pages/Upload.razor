@@ -1,7 +1,5 @@
 @page "/upload"
-@inject NavigationManager NavigationManager
 @inject IOptions<BlobStorageOptions> BlobStorageOptions
-@inject IOptions<AccessTokenOptions> AccessTokenOptions
 
 <PageTitle>Upload images</PageTitle>
 
@@ -12,7 +10,7 @@
 
 <section class="surface-card"
          id="@UploaderRootId"
-         data-upload-url="@UploadUrl"
+         data-upload-url="/api/images/upload"
          data-max-upload-bytes="@BlobStorageOptions.Value.MaxUploadBytes"
          data-accepted-mime-types="@AcceptAttributeValue">
     <div class="section-header">
@@ -56,7 +54,7 @@
 </section>
 
 <script type="module">
-    import { initializeUploader } from '@UploadScriptUrl';
+    import { initializeUploader } from '/js/uploadPage.js';
     initializeUploader('@UploaderRootId');
 </script>
 
@@ -64,13 +62,4 @@
     private const string UploaderRootId = "js-image-uploader";
 
     private string AcceptAttributeValue => string.Join(",", BlobStorageOptions.Value.AllowedMimeTypes);
-
-    private string? CurrentAccessToken =>
-        AccessTokenUrlHelper.GetTokenFromAbsoluteUri(NavigationManager.Uri, AccessTokenOptions.Value.QueryParameterName);
-
-    private string UploadUrl =>
-        AccessTokenUrlHelper.AppendToken("/api/images/upload", AccessTokenOptions.Value.QueryParameterName, CurrentAccessToken);
-
-    private string UploadScriptUrl =>
-        AccessTokenUrlHelper.AppendToken("/js/uploadPage.js", AccessTokenOptions.Value.QueryParameterName, CurrentAccessToken);
 }
