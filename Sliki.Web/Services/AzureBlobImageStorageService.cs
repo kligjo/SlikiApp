@@ -118,14 +118,8 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
         };
 
         var totalCount = images.Count;
-        var pageNumber = Math.Max(1, query.PageNumber);
-        var pageSize = Math.Clamp(query.PageSize, 1, Math.Max(1, _options.PageSize));
-        var pageItems = images
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
 
-        return new ImagePageResult(pageItems, totalCount, pageNumber, pageSize);
+        return new ImagePageResult(images, totalCount, 1, totalCount);
     }
 
     public async Task<BlobImageDownload?> OpenReadAsync(string blobName, CancellationToken cancellationToken)

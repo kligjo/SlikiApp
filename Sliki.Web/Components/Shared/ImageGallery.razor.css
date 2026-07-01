@@ -74,18 +74,9 @@
     border: 2px solid #fff;
 }
 
-/* ── Pagination ──────────────────────────────────────────── */
-.pagination-shell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1rem 0;
-}
-
-.pagination-label {
-    font-size: 0.875rem;
-    color: #64748b;
+/* ── Infinite scroll sentinel ────────────────────────────── */
+.scroll-sentinel {
+    height: 1px;
 }
 
 /* ── Status ──────────────────────────────────────────────── */

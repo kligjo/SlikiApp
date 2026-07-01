@@ -1,3 +1,4 @@
+@implements IAsyncDisposable
 @inject IImageStorageService ImageStorageService
 @inject ImageFileValidator ImageFileValidator
 @inject IJSRuntime JS
@@ -15,7 +16,7 @@
         <button type="button" class="btn btn-sm btn-primary" @onclick="ApplyFiltersAsync">Apply</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ResetFiltersAsync">Reset</button>
     </div>
-    @if (CurrentPage is not null && CurrentPage.TotalCount > 0)
+    @if (_allImages.Count > 0)
     {
         <button type="button" class="btn btn-sm @(SelectMode ? "btn-primary" : "btn-outline-secondary")"
                 @onclick="ToggleSelectMode">
@@ -24,22 +25,22 @@
     }
 </div>
 
-@if (IsLoading)
+@if (_initialLoading)
 {
     <p class="gallery-status">Loading…</p>
 }
-else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+else if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
-    <p class="gallery-status text-danger">@ErrorMessage</p>
+    <p class="gallery-status text-danger">@_errorMessage</p>
 }
-else if (CurrentPage is null || CurrentPage.TotalCount == 0)
+else if (_allImages.Count == 0)
 {
     <p class="gallery-status">No images found. Upload some first.</p>
 }
 else
 {
     <div class="photo-grid" aria-live="polite">
-        @foreach (var image in CurrentPage.Items)
+        @foreach (var image in _allImages.Take(_visibleCount))
         {
             var isSelected = SelectedBlobNames.Contains(image.BlobName);
             <button type="button"
@@ -55,15 +56,12 @@ else
         }
     </div>
 
-    <nav class="pagination-shell" aria-label="Gallery pages">
-        <button type="button" class="btn btn-outline-secondary btn-sm"
-                @onclick="() => ChangePageAsync(CurrentPage.PageNumber - 1)"
-                disabled="@(CurrentPage.PageNumber <= 1)">‹ Prev</button>
-        <span class="pagination-label">@CurrentPage.PageNumber / @CurrentPage.TotalPages</span>
-        <button type="button" class="btn btn-outline-secondary btn-sm"
-                @onclick="() => ChangePageAsync(CurrentPage.PageNumber + 1)"
-                disabled="@(CurrentPage.PageNumber >= CurrentPage.TotalPages)">Next ›</button>
-    </nav>
+    <div id="scroll-sentinel" class="scroll-sentinel"></div>
+
+    @if (_isLoading)
+    {
+        <p class="gallery-status">Loading more…</p>
+    }
 }
 
 @if (SelectMode && SelectedBlobNames.Count > 0)
@@ -98,21 +96,24 @@ else
             <div class="lightbox-nav">
                 <button type="button" class="lightbox-nav-btn" @onclick="PrevImage"
                         disabled="@(LightboxIndex <= 0)">❮</button>
-                <span class="lightbox-counter">@(LightboxIndex + 1) / @CurrentPage!.Items.Count</span>
+                <span class="lightbox-counter">@(LightboxIndex + 1) / @_allImages.Count</span>
                 <button type="button" class="lightbox-nav-btn" @onclick="NextImage"
-                        disabled="@(LightboxIndex >= (CurrentPage!.Items.Count - 1))">❯</button>
+                        disabled="@(LightboxIndex >= _allImages.Count - 1)">❯</button>
             </div>
         </div>
     </div>
 }
 
 @code {
-    private ImagePageResult? CurrentPage { get; set; }
-    private bool IsLoading { get; set; } = true;
-    private string? ErrorMessage { get; set; }
+    private const int BatchSize = 100;
+
+    private List<GalleryImageItem> _allImages = [];
+    private int _visibleCount = BatchSize;
+    private bool _initialLoading = true;
+    private bool _isLoading;
+    private string? _errorMessage;
     private string SearchText { get; set; } = string.Empty;
     private ImageSortBy SortBy { get; set; } = ImageSortBy.LatestFirst;
-    private int PageSize => ImageFileValidator.PageSize;
 
     private bool SelectMode { get; set; }
     private HashSet<string> SelectedBlobNames { get; } = [];
@@ -120,40 +121,56 @@ else
     private GalleryImageItem? LightboxImage { get; set; }
     private int LightboxIndex { get; set; }
 
-    protected override async Task OnInitializedAsync() => await LoadPageAsync(1);
+    private DotNetObjectReference<ImageGallery>? _dotNetRef;
 
-    private async Task ApplyFiltersAsync() => await LoadPageAsync(1);
+    protected override async Task OnInitializedAsync() => await LoadImagesAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("slikiGallery.initInfiniteScroll", _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnSentinelVisible()
+    {
+        if (_visibleCount >= _allImages.Count) return;
+        _visibleCount = Math.Min(_visibleCount + BatchSize, _allImages.Count);
+        StateHasChanged();
+    }
+
+    private async Task ApplyFiltersAsync() => await LoadImagesAsync();
 
     private async Task ResetFiltersAsync()
     {
         SearchText = string.Empty;
         SortBy = ImageSortBy.LatestFirst;
-        await LoadPageAsync(1);
+        await LoadImagesAsync();
     }
 
-    private async Task ChangePageAsync(int pageNumber)
+    private async Task LoadImagesAsync()
     {
-        if (CurrentPage is null) return;
-        await LoadPageAsync(Math.Clamp(pageNumber, 1, CurrentPage.TotalPages));
-    }
-
-    private async Task LoadPageAsync(int pageNumber)
-    {
-        IsLoading = true;
-        ErrorMessage = null;
+        _isLoading = true;
+        _errorMessage = null;
         try
         {
-            CurrentPage = await ImageStorageService.GetImagesAsync(
-                new ImageQuery(SearchText.Trim(), SortBy, pageNumber, PageSize),
+            var result = await ImageStorageService.GetImagesAsync(
+                new ImageQuery(SearchText.Trim(), SortBy, 1, int.MaxValue),
                 CancellationToken.None);
+            _allImages = result.Items.ToList();
+            _visibleCount = BatchSize;
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
+            _errorMessage = ex.Message;
         }
         finally
         {
-            IsLoading = false;
+            _isLoading = false;
+            _initialLoading = false;
         }
     }
 
@@ -178,7 +195,7 @@ else
 
     private void OpenLightbox(GalleryImageItem image)
     {
-        LightboxIndex = CurrentPage!.Items.ToList().IndexOf(image);
+        LightboxIndex = _allImages.IndexOf(image);
         LightboxImage = image;
     }
 
@@ -186,22 +203,26 @@ else
 
     private void PrevImage()
     {
-        if (CurrentPage is null || LightboxIndex <= 0) return;
+        if (LightboxIndex <= 0) return;
         LightboxIndex--;
-        LightboxImage = CurrentPage.Items.ElementAt(LightboxIndex);
+        LightboxImage = _allImages[LightboxIndex];
     }
 
     private void NextImage()
     {
-        if (CurrentPage is null || LightboxIndex >= CurrentPage.Items.Count - 1) return;
+        if (LightboxIndex >= _allImages.Count - 1) return;
         LightboxIndex++;
-        LightboxImage = CurrentPage.Items.ElementAt(LightboxIndex);
+        LightboxImage = _allImages[LightboxIndex];
+        // Reveal more tiles if lightboxing past the visible window
+        if (LightboxIndex >= _visibleCount)
+        {
+            _visibleCount = Math.Min(LightboxIndex + BatchSize, _allImages.Count);
+        }
     }
 
     private async Task DownloadSelectedAsync()
     {
-        if (CurrentPage is null) return;
-        var toDownload = CurrentPage.Items
+        var toDownload = _allImages
             .Where(i => SelectedBlobNames.Contains(i.BlobName))
             .Select(i => new { url = GetImageUrl(i.BlobName), name = i.FileName })
             .ToList();
@@ -215,4 +236,13 @@ else
 
     private string GetImageUrl(string blobName) =>
         $"/images/{Uri.EscapeDataString(blobName)}";
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef is not null)
+        {
+            try { await JS.InvokeVoidAsync("slikiGallery.disposeInfiniteScroll"); } catch { }
+            _dotNetRef.Dispose();
+        }
+    }
 }
