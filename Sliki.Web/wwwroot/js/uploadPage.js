@@ -1,6 +1,12 @@
 const uploaders = new Map();
 
-export function initializeUploader(rootId) {
+window.slikiUpload = {
+    tryInit() {
+        initializeUploader('js-image-uploader');
+    }
+};
+
+function initializeUploader(rootId) {
     const root = document.getElementById(rootId);
     if (!root) {
         return;
@@ -47,7 +53,7 @@ export function initializeUploader(rootId) {
     render(state);
 }
 
-export function disposeUploader(rootId) {
+function disposeUploader(rootId) {
     const state = uploaders.get(rootId);
     if (!state) {
         return;

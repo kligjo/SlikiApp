@@ -20,15 +20,11 @@
     <Routes />
     <ReconnectModal />
     <script src="/js/gallery.js"></script>
+    <script src="/js/uploadPage.js"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script>
-        async function tryInitUploader() {
-            if (!document.getElementById('js-image-uploader')) return;
-            const { initializeUploader } = await import('/js/uploadPage.js');
-            initializeUploader('js-image-uploader');
-        }
-        tryInitUploader();
-        document.addEventListener('blazor:enhancedload', tryInitUploader);
+        window.slikiUpload.tryInit();
+        document.addEventListener('blazor:enhancedload', () => window.slikiUpload.tryInit());
     </script>
 </body>
 
