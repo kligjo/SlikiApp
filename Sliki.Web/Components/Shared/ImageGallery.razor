@@ -1,117 +1,126 @@
 @inject IImageStorageService ImageStorageService
 @inject ImageFileValidator ImageFileValidator
+@inject IJSRuntime JS
 
-<section class="surface-card">
-    <div class="gallery-toolbar">
-        <div class="gallery-toolbar-item">
-            <label class="form-label" for="image-filter">Filter by file name</label>
-            <input id="image-filter" class="form-control" @bind="SearchText" @bind:event="oninput" placeholder="Search images" />
-        </div>
-
-        <div class="gallery-toolbar-item">
-            <label class="form-label" for="sort-order">Sort</label>
-            <select id="sort-order" class="form-select" @bind="SortBy">
-                <option value="@ImageSortBy.LatestFirst">Newest first</option>
-                <option value="@ImageSortBy.OldestFirst">Oldest first</option>
-                <option value="@ImageSortBy.NameAscending">Name A-Z</option>
-                <option value="@ImageSortBy.NameDescending">Name Z-A</option>
-            </select>
-        </div>
-
-        <div class="gallery-toolbar-actions">
-            <button type="button" class="btn btn-primary" @onclick="ApplyFiltersAsync">Apply</button>
-            <button type="button" class="btn btn-outline-secondary" @onclick="ResetFiltersAsync">Reset</button>
-        </div>
+<div class="gallery-bar">
+    <div class="gallery-bar-filters">
+        <input class="form-control form-control-sm" @bind="SearchText" @bind:event="oninput"
+               placeholder="Search images" aria-label="Filter by file name" />
+        <select class="form-select form-select-sm" @bind="SortBy" aria-label="Sort order">
+            <option value="@ImageSortBy.LatestFirst">Newest first</option>
+            <option value="@ImageSortBy.OldestFirst">Oldest first</option>
+            <option value="@ImageSortBy.NameAscending">Name A–Z</option>
+            <option value="@ImageSortBy.NameDescending">Name Z–A</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-primary" @onclick="ApplyFiltersAsync">Apply</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ResetFiltersAsync">Reset</button>
     </div>
-</section>
+    @if (CurrentPage is not null && CurrentPage.TotalCount > 0)
+    {
+        <button type="button" class="btn btn-sm @(SelectMode ? "btn-primary" : "btn-outline-secondary")"
+                @onclick="ToggleSelectMode">
+            @(SelectMode ? $"Cancel ({SelectedBlobNames.Count})" : "Select")
+        </button>
+    }
+</div>
 
 @if (IsLoading)
 {
-    <section class="surface-card mt-3">
-        <p class="mb-0">Loading images from Azure Blob Storage...</p>
-    </section>
+    <p class="gallery-status">Loading…</p>
 }
 else if (!string.IsNullOrWhiteSpace(ErrorMessage))
 {
-    <section class="surface-card mt-3">
-        <p class="text-danger mb-0">@ErrorMessage</p>
-    </section>
+    <p class="gallery-status text-danger">@ErrorMessage</p>
 }
 else if (CurrentPage is null || CurrentPage.TotalCount == 0)
 {
-    <section class="surface-card empty-state mt-3">
-        <h2>No images found</h2>
-        <p>Upload images first, or adjust the current filter.</p>
-    </section>
+    <p class="gallery-status">No images found. Upload some first.</p>
 }
 else
 {
-    <section class="gallery-grid" aria-live="polite">
+    <div class="photo-grid" aria-live="polite">
         @foreach (var image in CurrentPage.Items)
         {
-            <button type="button" class="image-card" @onclick="() => OpenImage(image)" aria-haspopup="dialog">
-                <img src="@GetImageUrl(image.BlobName)"
-                     alt="@image.FileName"
-                     class="gallery-thumbnail"
-                     loading="lazy" />
-                <span class="image-card-body">
-                    <strong>@image.FileName</strong>
-                    <span>@image.UploadedAt.LocalDateTime:g</span>
-                    <span>@FileSizeFormatter.Format(image.SizeInBytes)</span>
-                </span>
+            var isSelected = SelectedBlobNames.Contains(image.BlobName);
+            <button type="button"
+                    class="photo-tile @(isSelected ? "photo-tile--selected" : "")"
+                    @onclick="() => OnTileClick(image)"
+                    aria-label="@image.FileName">
+                <img src="@GetImageUrl(image.BlobName)" alt="@image.FileName" loading="lazy" class="photo-thumb" />
+                @if (SelectMode)
+                {
+                    <span class="photo-check" aria-hidden="true">@(isSelected ? "✓" : "")</span>
+                }
             </button>
         }
-    </section>
+    </div>
 
     <nav class="pagination-shell" aria-label="Gallery pages">
-        <button type="button" class="btn btn-outline-secondary" @onclick="() => ChangePageAsync(CurrentPage.PageNumber - 1)" disabled="@(CurrentPage.PageNumber <= 1)">
-            Previous
-        </button>
-        <span>Page @CurrentPage.PageNumber of @CurrentPage.TotalPages</span>
-        <button type="button" class="btn btn-outline-secondary" @onclick="() => ChangePageAsync(CurrentPage.PageNumber + 1)" disabled="@(CurrentPage.PageNumber >= CurrentPage.TotalPages)">
-            Next
-        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                @onclick="() => ChangePageAsync(CurrentPage.PageNumber - 1)"
+                disabled="@(CurrentPage.PageNumber <= 1)">‹ Prev</button>
+        <span class="pagination-label">@CurrentPage.PageNumber / @CurrentPage.TotalPages</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                @onclick="() => ChangePageAsync(CurrentPage.PageNumber + 1)"
+                disabled="@(CurrentPage.PageNumber >= CurrentPage.TotalPages)">Next ›</button>
     </nav>
 }
 
-@if (SelectedImage is not null)
+@if (SelectMode && SelectedBlobNames.Count > 0)
 {
-    <div class="lightbox-backdrop" role="dialog" aria-modal="true" aria-label="Image preview">
-        <div class="lightbox-panel">
-            <div class="lightbox-header">
-                <div>
-                    <h2>@SelectedImage.FileName</h2>
-                    <p class="mb-0">@SelectedImage.UploadedAt.LocalDateTime:g • @FileSizeFormatter.Format(SelectedImage.SizeInBytes)</p>
+    <div class="select-bar">
+        <span>@SelectedBlobNames.Count selected</span>
+        <button type="button" class="btn btn-primary btn-sm" @onclick="DownloadSelectedAsync">
+            Download @SelectedBlobNames.Count
+        </button>
+    </div>
+}
+
+@if (LightboxImage is not null)
+{
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" @onclick="CloseLightbox">
+        <div class="lightbox-inner" @onclick:stopPropagation>
+            <div class="lightbox-top">
+                <span class="lightbox-name">@LightboxImage.FileName</span>
+                <div class="lightbox-top-actions">
+                    <a class="btn btn-sm btn-outline-light"
+                       href="@GetImageUrl(LightboxImage.BlobName)"
+                       download="@LightboxImage.FileName"
+                       @onclick:stopPropagation>↓ Download</a>
+                    <button type="button" class="btn btn-sm btn-outline-light" @onclick="CloseLightbox">✕</button>
                 </div>
-                <button type="button" class="btn btn-outline-light" @onclick="CloseImage">Close</button>
             </div>
 
-            <img src="@GetImageUrl(SelectedImage.BlobName)"
-                 alt="@SelectedImage.FileName"
-                 class="lightbox-image" />
+            <img src="@GetImageUrl(LightboxImage.BlobName)"
+                 alt="@LightboxImage.FileName"
+                 class="lightbox-img" />
+
+            <div class="lightbox-nav">
+                <button type="button" class="lightbox-nav-btn" @onclick="PrevImage"
+                        disabled="@(LightboxIndex <= 0)">❮</button>
+                <span class="lightbox-counter">@(LightboxIndex + 1) / @CurrentPage!.Items.Count</span>
+                <button type="button" class="lightbox-nav-btn" @onclick="NextImage"
+                        disabled="@(LightboxIndex >= (CurrentPage!.Items.Count - 1))">❯</button>
+            </div>
         </div>
     </div>
 }
 
 @code {
     private ImagePageResult? CurrentPage { get; set; }
-
-    private GalleryImageItem? SelectedImage { get; set; }
-
     private bool IsLoading { get; set; } = true;
-
     private string? ErrorMessage { get; set; }
-
     private string SearchText { get; set; } = string.Empty;
-
     private ImageSortBy SortBy { get; set; } = ImageSortBy.LatestFirst;
-
     private int PageSize => ImageFileValidator.PageSize;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadPageAsync(1);
-    }
+    private bool SelectMode { get; set; }
+    private HashSet<string> SelectedBlobNames { get; } = [];
+
+    private GalleryImageItem? LightboxImage { get; set; }
+    private int LightboxIndex { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadPageAsync(1);
 
     private async Task ApplyFiltersAsync() => await LoadPageAsync(1);
 
@@ -124,11 +133,7 @@ else
 
     private async Task ChangePageAsync(int pageNumber)
     {
-        if (CurrentPage is null)
-        {
-            return;
-        }
-
+        if (CurrentPage is null) return;
         await LoadPageAsync(Math.Clamp(pageNumber, 1, CurrentPage.TotalPages));
     }
 
@@ -136,7 +141,6 @@ else
     {
         IsLoading = true;
         ErrorMessage = null;
-
         try
         {
             CurrentPage = await ImageStorageService.GetImagesAsync(
@@ -153,10 +157,62 @@ else
         }
     }
 
+    private void OnTileClick(GalleryImageItem image)
+    {
+        if (SelectMode)
+        {
+            if (!SelectedBlobNames.Remove(image.BlobName))
+                SelectedBlobNames.Add(image.BlobName);
+        }
+        else
+        {
+            OpenLightbox(image);
+        }
+    }
+
+    private void ToggleSelectMode()
+    {
+        SelectMode = !SelectMode;
+        if (!SelectMode) SelectedBlobNames.Clear();
+    }
+
+    private void OpenLightbox(GalleryImageItem image)
+    {
+        LightboxIndex = CurrentPage!.Items.ToList().IndexOf(image);
+        LightboxImage = image;
+    }
+
+    private void CloseLightbox() => LightboxImage = null;
+
+    private void PrevImage()
+    {
+        if (CurrentPage is null || LightboxIndex <= 0) return;
+        LightboxIndex--;
+        LightboxImage = CurrentPage.Items.ElementAt(LightboxIndex);
+    }
+
+    private void NextImage()
+    {
+        if (CurrentPage is null || LightboxIndex >= CurrentPage.Items.Count - 1) return;
+        LightboxIndex++;
+        LightboxImage = CurrentPage.Items.ElementAt(LightboxIndex);
+    }
+
+    private async Task DownloadSelectedAsync()
+    {
+        if (CurrentPage is null) return;
+        var toDownload = CurrentPage.Items
+            .Where(i => SelectedBlobNames.Contains(i.BlobName))
+            .Select(i => new { url = GetImageUrl(i.BlobName), name = i.FileName })
+            .ToList();
+
+        foreach (var item in toDownload)
+        {
+            await JS.InvokeVoidAsync("slikiGallery.downloadFile", item.url, item.name);
+            await Task.Delay(300);
+        }
+    }
+
     private string GetImageUrl(string blobName) =>
         $"/images/{Uri.EscapeDataString(blobName)}";
-
-    private void OpenImage(GalleryImageItem image) => SelectedImage = image;
-
-    private void CloseImage() => SelectedImage = null;
 }
