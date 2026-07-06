@@ -1,5 +1,5 @@
 @page "/upload"
-@inject IOptions<BlobStorageOptions> BlobStorageOptions
+@rendermode InteractiveServer
 
 <PageTitle>Upload images</PageTitle>
 
@@ -8,54 +8,4 @@
     <p>Select one or more supported image files, preview them, and upload to the private <code>sliki</code> container.</p>
 </div>
 
-<section class="surface-card"
-         id="@UploaderRootId"
-         data-upload-url="/api/images/upload"
-         data-max-upload-bytes="@BlobStorageOptions.Value.MaxUploadBytes"
-         data-accepted-mime-types="@AcceptAttributeValue">
-    <div class="section-header">
-        <div>
-            <h2>Choose images</h2>
-            <p class="section-copy">
-                Accepted formats: JPEG, PNG, GIF, WebP, BMP. Maximum file size:
-                <strong>@FileSizeFormatter.Format(BlobStorageOptions.Value.MaxUploadBytes)</strong> per image.
-            </p>
-        </div>
-    </div>
-
-    <label class="form-label fw-semibold" for="browser-upload-input">Browse for images</label>
-    <input id="browser-upload-input"
-           class="form-control"
-           type="file"
-           multiple
-           accept="@AcceptAttributeValue" />
-
-    <div class="upload-actions">
-        <button type="button" class="btn btn-primary" data-upload-action="upload-all">
-            Upload all
-        </button>
-        <button type="button" class="btn btn-outline-secondary" data-upload-action="retry-failed">
-            Retry failed
-        </button>
-        <button type="button" class="btn btn-link" data-upload-action="clear-selection">
-            Clear selection
-        </button>
-    </div>
-
-    <div class="alert alert-success d-none mt-3" role="status" data-upload-status></div>
-    <div class="alert alert-warning d-none mt-3" role="status" data-upload-selection-message></div>
-
-    <section class="surface-card empty-state mt-3" data-upload-empty-state aria-live="polite">
-        <h2>No files selected yet</h2>
-        <p>Use the file picker above to add one or more images for upload.</p>
-    </section>
-
-    <section class="upload-list d-none" data-upload-list aria-live="polite"></section>
-</section>
-
-
-@code {
-    private const string UploaderRootId = "js-image-uploader";
-
-    private string AcceptAttributeValue => string.Join(",", BlobStorageOptions.Value.AllowedMimeTypes);
-}
+<ImageUploader />
