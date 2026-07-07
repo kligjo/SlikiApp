@@ -1,5 +1,4 @@
 @implements IAsyncDisposable
-@inject IImageStorageService ImageStorageService
 @inject ImageFileValidator ImageFileValidator
 @inject ILogger<ImageUploader> Logger
 @inject IJSRuntime JSRuntime
@@ -20,7 +19,7 @@
             <h2>Choose images</h2>
             <p class="section-copy">
                 Accepted formats: JPEG, PNG, GIF, WebP, BMP. Maximum file size:
-                <strong>@FileSizeFormatter.Format(MaxUploadBytes)</strong> per image.
+                <strong>@FileSizeFormatter.Format(ImageFileValidator.MaxUploadBytes)</strong> per image.
             </p>
         </div>
     </div>
@@ -59,9 +58,9 @@ else
         {
             <article class="surface-card upload-item" @key="item.Id">
                 <div class="preview-frame">
-                    @if (!string.IsNullOrWhiteSpace(item.PreviewDataUrl))
+                    @if (!string.IsNullOrWhiteSpace(item.PreviewUrl))
                     {
-                        <img src="@item.PreviewDataUrl" alt="" class="preview-image" />
+                        <img src="@item.PreviewUrl" alt="" class="preview-image" />
                     }
                     else
                     {
@@ -78,7 +77,8 @@ else
                         <span class="@GetStatusBadgeClass(item.State)">@GetStatusLabel(item.State)</span>
                     </div>
 
-                    <div class="progress" role="progressbar" aria-label="Upload progress" aria-valuenow="@item.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress" role="progressbar" aria-label="Upload progress"
+                         aria-valuenow="@item.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar" style="@($"width:{item.ProgressPercent}%")">@item.ProgressPercent%</div>
                     </div>
 
@@ -108,20 +108,39 @@ else
     private const int MaxSelectedFiles = 100;
 
     private readonly List<SelectedUploadItem> SelectedItems = [];
-    private IJSObjectReference? _module;
+    private DotNetObjectReference<ImageUploader>? _dotNetRef;
+    private SelectedUploadItem? _activeItem;
+    private TaskCompletionSource<(bool Success, string Response, string Error)>? _uploadTcs;
 
     private bool IsUploading { get; set; }
-
     private string? StatusMessage { get; set; }
-
     private string? SelectionMessage { get; set; }
-
-    private long MaxUploadBytes => ImageFileValidator.MaxUploadBytes;
 
     private bool CanUploadAny =>
         !IsUploading && SelectedItems.Any(item => item.State is UploadState.Pending or UploadState.Failed);
 
-    private bool HasFailedItems => !IsUploading && SelectedItems.Any(item => item.State == UploadState.Failed);
+    private bool HasFailedItems =>
+        !IsUploading && SelectedItems.Any(item => item.State == UploadState.Failed);
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    [JSInvokable]
+    public void OnUploadProgress(int percent)
+    {
+        if (_activeItem is null) return;
+        _activeItem.ProgressPercent = percent;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnUploadDone(bool success, string responseText, string error)
+    {
+        _uploadTcs?.TrySetResult((success, responseText, error));
+    }
 
     private async Task HandleFilesSelectedAsync(InputFileChangeEventArgs args)
     {
@@ -130,51 +149,46 @@ else
             StatusMessage = null;
             SelectionMessage = null;
 
-            if (args.FileCount == 0)
-            {
-                return;
-            }
+            if (args.FileCount == 0) return;
 
-            IReadOnlyList<IBrowserFile> files;
-
-            try
-            {
-                files = args.GetMultipleFiles(MaxSelectedFiles);
-            }
-            catch (InvalidOperationException)
+            if (args.FileCount > MaxSelectedFiles)
             {
                 SelectionMessage = $"Select up to {MaxSelectedFiles} images at a time.";
                 return;
             }
 
-            foreach (var file in files)
+            JsFileInfo[] jsFiles;
+            try
             {
-                try
-                {
-                    var item = new SelectedUploadItem
-                    {
-                        File = file,
-                        DisplayName = FileNameSanitizer.SanitizeDisplayName(file.Name),
-                        BrowserContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "unknown" : file.ContentType,
-                        SizeInBytes = file.Size
-                    };
-
-                    if (file.Size > MaxUploadBytes)
-                    {
-                        item.State = UploadState.Failed;
-                        item.StatusDetails = "File rejected before upload.";
-                        item.ErrorMessage = $"The file exceeds the limit of {FileSizeFormatter.Format(MaxUploadBytes)}.";
-                    }
-
-                    SelectedItems.Add(item);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    SelectionMessage = ex.Message;
-                }
+                jsFiles = await JSRuntime.InvokeAsync<JsFileInfo[]>("slikiGallery.registerFiles", FileInputId);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to register files in JS.");
+                SelectionMessage = "Could not read the selected files.";
+                return;
             }
 
-            await PopulatePreviewUrlsAsync(files.Count);
+            foreach (var f in jsFiles)
+            {
+                var item = new SelectedUploadItem
+                {
+                    JsFileId = f.Id,
+                    PreviewUrl = f.PreviewUrl,
+                    DisplayName = FileNameSanitizer.SanitizeDisplayName(f.Name),
+                    BrowserContentType = string.IsNullOrWhiteSpace(f.Type) ? "unknown" : f.Type,
+                    SizeInBytes = f.Size
+                };
+
+                if (f.Size > ImageFileValidator.MaxUploadBytes)
+                {
+                    item.State = UploadState.Failed;
+                    item.StatusDetails = "File rejected before upload.";
+                    item.ErrorMessage = $"Exceeds the {FileSizeFormatter.Format(ImageFileValidator.MaxUploadBytes)} limit.";
+                }
+
+                SelectedItems.Add(item);
+            }
         }
         catch (Exception ex)
         {
@@ -185,59 +199,34 @@ else
 
     private async Task UploadAllAsync()
     {
-        if (IsUploading)
-        {
-            return;
-        }
-
+        if (IsUploading) return;
         IsUploading = true;
         StatusMessage = null;
         var uploadedCount = 0;
 
-        foreach (var item in SelectedItems.Where(item => item.State is UploadState.Pending or UploadState.Failed).ToList())
+        foreach (var item in SelectedItems.Where(i => i.State is UploadState.Pending or UploadState.Failed).ToList())
         {
-            var uploaded = await UploadCoreAsync(item);
-            if (uploaded)
-            {
-                uploadedCount++;
-            }
+            if (await UploadCoreAsync(item)) uploadedCount++;
         }
 
         IsUploading = false;
-
         if (uploadedCount > 0)
-        {
-            StatusMessage = uploadedCount == 1
-                ? "1 image uploaded successfully."
-                : $"{uploadedCount} images uploaded successfully.";
-        }
+            StatusMessage = uploadedCount == 1 ? "1 image uploaded successfully." : $"{uploadedCount} images uploaded successfully.";
     }
 
     private async Task RetryFailedAsync()
     {
-        if (IsUploading)
-        {
-            return;
-        }
-
+        if (IsUploading) return;
         IsUploading = true;
         StatusMessage = null;
-
-        foreach (var item in SelectedItems.Where(item => item.State == UploadState.Failed).ToList())
-        {
+        foreach (var item in SelectedItems.Where(i => i.State == UploadState.Failed).ToList())
             await UploadCoreAsync(item);
-        }
-
         IsUploading = false;
     }
 
     private async Task UploadItemAsync(SelectedUploadItem item)
     {
-        if (!CanUploadItem(item))
-        {
-            return;
-        }
-
+        if (!CanUploadItem(item)) return;
         IsUploading = true;
         StatusMessage = null;
         await UploadCoreAsync(item);
@@ -248,41 +237,25 @@ else
     {
         item.State = UploadState.Uploading;
         item.ErrorMessage = null;
-        item.StatusDetails = "Reading file from the browser...";
+        item.StatusDetails = "Uploading...";
         item.ProgressPercent = 0;
+        StateHasChanged();
 
         try
         {
-            using var content = await ReadFileToMemoryAsync(item);
-            var headerBytes = GetHeaderBytes(content);
-            var validation = ImageFileValidator.Validate(item.DisplayName, item.BrowserContentType, item.SizeInBytes, headerBytes);
+            _activeItem = item;
+            _uploadTcs = new TaskCompletionSource<(bool, string, string)>();
 
-            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
-            {
-                throw new InvalidOperationException(validation.ErrorMessage ?? "The image failed validation.");
-            }
+            await JSRuntime.InvokeVoidAsync("slikiGallery.uploadFile", item.JsFileId, _dotNetRef);
 
-            content.Position = 0;
-            var uploadProgress = new Progress<long>(uploadedBytes =>
-            {
-                var uploadPercent = content.Length == 0
-                    ? 100
-                    : (int)Math.Round(uploadedBytes * 70d / content.Length);
+            var (success, responseText, error) = await _uploadTcs.Task;
 
-                item.ProgressPercent = Math.Clamp(30 + uploadPercent, 30, 100);
-                item.StatusDetails = "Uploading to Azure Blob Storage...";
-                _ = InvokeAsync(StateHasChanged);
-            });
-
-            var result = await ImageStorageService.UploadAsync(
-                new UploadImageRequest(item.DisplayName, validation.NormalizedContentType, item.SizeInBytes, content),
-                uploadProgress,
-                CancellationToken.None);
+            if (!success)
+                throw new InvalidOperationException(error);
 
             item.State = UploadState.Success;
             item.ProgressPercent = 100;
-            item.StatusDetails = $"Uploaded {result.UploadedAt.LocalDateTime:g}.";
-            item.StoredBlobName = result.BlobName;
+            item.StatusDetails = "Uploaded successfully.";
             return true;
         }
         catch (Exception ex)
@@ -295,180 +268,75 @@ else
         }
         finally
         {
+            _activeItem = null;
+            _uploadTcs = null;
             await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task<MemoryStream> ReadFileToMemoryAsync(SelectedUploadItem item)
-    {
-        await using var browserStream = item.File.OpenReadStream(MaxUploadBytes, CancellationToken.None);
-        var buffer = ArrayPool<byte>.Shared.Rent(80 * 1024);
-        var memoryStream = new MemoryStream(capacity: item.SizeInBytes > int.MaxValue ? int.MaxValue : (int)item.SizeInBytes);
-        long totalRead = 0;
-
-        try
-        {
-            while (true)
-            {
-                var bytesRead = await browserStream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken.None);
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-
-                await memoryStream.WriteAsync(buffer.AsMemory(0, bytesRead), CancellationToken.None);
-                totalRead += bytesRead;
-                item.ProgressPercent = item.SizeInBytes == 0
-                    ? 0
-                    : Math.Clamp((int)Math.Round(totalRead * 30d / item.SizeInBytes), 1, 30);
-                item.StatusDetails = "Reading file from the browser...";
-                await InvokeAsync(StateHasChanged);
-            }
-
-            memoryStream.Position = 0;
-            return memoryStream;
-        }
-        catch
-        {
-            memoryStream.Dispose();
-            throw;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
-    private static byte[] GetHeaderBytes(MemoryStream memoryStream)
-    {
-        if (memoryStream.TryGetBuffer(out var buffer))
-        {
-            return buffer.AsSpan(0, (int)Math.Min(memoryStream.Length, 32)).ToArray();
-        }
-
-        var bytes = memoryStream.ToArray();
-        return bytes.AsSpan(0, Math.Min(bytes.Length, 32)).ToArray();
-    }
-
-    private async Task PopulatePreviewUrlsAsync(int selectedFileCount)
-    {
-        try
-        {
-            var module = await GetModuleAsync();
-            var previewUrls = await module.InvokeAsync<string[]>("getImagePreviewUrls", FileInputId);
-            var itemsToUpdate = SelectedItems.TakeLast(selectedFileCount).ToList();
-
-            for (var index = 0; index < itemsToUpdate.Count && index < previewUrls.Length; index++)
-            {
-                itemsToUpdate[index].PreviewDataUrl = previewUrls[index];
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Image previews could not be generated in the browser.");
         }
     }
 
     private async Task ClearSelectionAsync()
     {
-        if (IsUploading)
-        {
-            return;
-        }
-
-        await RevokePreviewUrlsAsync();
+        if (IsUploading) return;
+        var fileIds = SelectedItems.Select(i => i.JsFileId).ToArray();
+        var previewUrls = SelectedItems.Select(i => i.PreviewUrl).Where(u => u is not null).ToArray();
         SelectedItems.Clear();
         StatusMessage = null;
         SelectionMessage = null;
-    }
-
-    private async Task<IJSObjectReference> GetModuleAsync()
-    {
-        _module ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/imageUploader.js");
-        return _module;
-    }
-
-    private async Task RevokePreviewUrlsAsync()
-    {
         try
         {
-            if (_module is not null)
-            {
-                await _module.InvokeVoidAsync("revokeImagePreviewUrls");
-            }
+            await JSRuntime.InvokeVoidAsync("slikiGallery.releaseFiles", (object)fileIds);
+            await JSRuntime.InvokeVoidAsync("slikiGallery.revokePreviewUrls", (object)previewUrls);
         }
-        catch (JSDisconnectedException)
-        {
-        }
+        catch (JSDisconnectedException) { }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await RevokePreviewUrlsAsync();
-
-        if (_module is not null)
+        try
         {
-            try
-            {
-                await _module.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-            }
+            var fileIds = SelectedItems.Select(i => i.JsFileId).ToArray();
+            var previewUrls = SelectedItems.Select(i => i.PreviewUrl).Where(u => u is not null).ToArray();
+            await JSRuntime.InvokeVoidAsync("slikiGallery.releaseFiles", (object)fileIds);
+            await JSRuntime.InvokeVoidAsync("slikiGallery.revokePreviewUrls", (object)previewUrls);
         }
+        catch { }
+        _dotNetRef?.Dispose();
     }
 
     private bool CanUploadItem(SelectedUploadItem item) =>
         !IsUploading && item.State is UploadState.Pending or UploadState.Failed;
 
-    private static string GetStatusBadgeClass(UploadState state) =>
-        state switch
-        {
-            UploadState.Success => "badge text-bg-success",
-            UploadState.Uploading => "badge text-bg-primary",
-            UploadState.Failed => "badge text-bg-danger",
-            _ => "badge text-bg-secondary"
-        };
-
-    private static string GetStatusLabel(UploadState state) =>
-        state switch
-        {
-            UploadState.Success => "Uploaded",
-            UploadState.Uploading => "Uploading",
-            UploadState.Failed => "Failed",
-            _ => "Ready"
-        };
-
-    private enum UploadState
+    private static string GetStatusBadgeClass(UploadState state) => state switch
     {
-        Pending,
-        Uploading,
-        Success,
-        Failed
-    }
+        UploadState.Success  => "badge text-bg-success",
+        UploadState.Uploading => "badge text-bg-primary",
+        UploadState.Failed   => "badge text-bg-danger",
+        _                    => "badge text-bg-secondary"
+    };
+
+    private static string GetStatusLabel(UploadState state) => state switch
+    {
+        UploadState.Success  => "Uploaded",
+        UploadState.Uploading => "Uploading",
+        UploadState.Failed   => "Failed",
+        _                    => "Ready"
+    };
+
+    private sealed record JsFileInfo(string Id, string? PreviewUrl, string Name, long Size, string Type);
+
+    private enum UploadState { Pending, Uploading, Success, Failed }
 
     private sealed class SelectedUploadItem
     {
         public Guid Id { get; } = Guid.NewGuid();
-
-        public required IBrowserFile File { get; init; }
-
+        public required string JsFileId { get; init; }
+        public string? PreviewUrl { get; init; }
         public required string DisplayName { get; init; }
-
         public required string BrowserContentType { get; init; }
-
         public required long SizeInBytes { get; init; }
-
-        public string? PreviewDataUrl { get; set; }
-
         public UploadState State { get; set; }
-
         public int ProgressPercent { get; set; }
-
         public string StatusDetails { get; set; } = "Ready to upload.";
-
         public string? ErrorMessage { get; set; }
-
-        public string? StoredBlobName { get; set; }
     }
 }
