@@ -135,6 +135,13 @@ app.MapPost(
 
             return Results.Ok(result);
         })
-    .DisableAntiforgery();
+    .DisableAntiforgery()
+    .AddEndpointFilter(async (ctx, next) =>
+    {
+        var sizeFeature = ctx.HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
+        if (sizeFeature is { IsReadOnly: false })
+            sizeFeature.MaxRequestBodySize = null;
+        return await next(ctx);
+    });
 
 app.Run();

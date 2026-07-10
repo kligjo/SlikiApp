@@ -63,8 +63,7 @@ public sealed class ImageFileValidator
         if (!TryDetectMimeType(headerBytes, out var detectedMimeType)
             || !_allowedMimeTypes.Contains(detectedMimeType))
         {
-            return ImageValidationResult.Failure(
-                "Only JPEG, PNG, GIF, WebP, and BMP images are supported.");
+            return ImageValidationResult.Failure("The file type is not supported.");
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedBrowserContentType)
@@ -139,6 +138,36 @@ public sealed class ImageFileValidator
             && headerBytes[..2].SequenceEqual("BM"u8))
         {
             mimeType = "image/bmp";
+            return true;
+        }
+
+        // WebM / MKV
+        if (headerBytes.Length >= 4
+            && headerBytes[0] == 0x1A
+            && headerBytes[1] == 0x45
+            && headerBytes[2] == 0xDF
+            && headerBytes[3] == 0xA3)
+        {
+            mimeType = "video/webm";
+            return true;
+        }
+
+        // AVI
+        if (headerBytes.Length >= 12
+            && headerBytes[..4].SequenceEqual("RIFF"u8)
+            && headerBytes[8..12].SequenceEqual("AVI "u8))
+        {
+            mimeType = "video/x-msvideo";
+            return true;
+        }
+
+        // MP4 / MOV — ISO base media file format (ftyp box at offset 4)
+        if (headerBytes.Length >= 12
+            && headerBytes[4..8].SequenceEqual("ftyp"u8))
+        {
+            mimeType = headerBytes[8..12].SequenceEqual("qt  "u8)
+                ? "video/quicktime"
+                : "video/mp4";
             return true;
         }
 
