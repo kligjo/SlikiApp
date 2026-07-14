@@ -47,7 +47,15 @@ else
                     class="photo-tile @(isSelected ? "photo-tile--selected" : "")"
                     @onclick="() => OnTileClick(image)"
                     aria-label="@image.FileName">
-                <img src="@GetImageUrl(image.BlobName)" alt="@image.FileName" loading="lazy" class="photo-thumb" />
+                @if (image.ContentType.StartsWith("video/"))
+                {
+                    <video src="@GetImageUrl(image.BlobName)" class="photo-thumb" preload="metadata" muted playsinline></video>
+                    <span class="photo-tile__play" aria-hidden="true"></span>
+                }
+                else
+                {
+                    <img src="@GetImageUrl(image.BlobName)" alt="@image.FileName" loading="lazy" class="photo-thumb" />
+                }
                 @if (SelectMode)
                 {
                     <span class="photo-check" aria-hidden="true">@(isSelected ? "✓" : "")</span>
@@ -89,9 +97,20 @@ else
                 </div>
             </div>
 
-            <img src="@GetImageUrl(LightboxImage.BlobName)"
-                 alt="@LightboxImage.FileName"
-                 class="lightbox-img" />
+            @if (LightboxImage.ContentType.StartsWith("video/"))
+            {
+                <video src="@GetImageUrl(LightboxImage.BlobName)"
+                       class="lightbox-img"
+                       controls
+                       playsinline
+                       preload="auto"></video>
+            }
+            else
+            {
+                <img src="@GetImageUrl(LightboxImage.BlobName)"
+                     alt="@LightboxImage.FileName"
+                     class="lightbox-img" />
+            }
 
             <div class="lightbox-nav">
                 <button type="button" class="lightbox-nav-btn" @onclick="PrevImage"
