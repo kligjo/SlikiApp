@@ -14,6 +14,8 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
 
     private readonly BlobContainerClient _containerClient;
     private readonly BlobStorageOptions _options;
+    private List<GalleryImageItem>? _cache;
+    private DateTimeOffset _cacheExpiry;
 
     public AzureBlobImageStorageService(
         BlobServiceClient blobServiceClient,
@@ -68,6 +70,8 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
             },
             cancellationToken);
 
+        _cache = null;
+
         return new StoredImageResult(
             blobName,
             safeDisplayName,
@@ -80,26 +84,34 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
     {
         await EnsureContainerExistsAsync(cancellationToken);
 
-        var images = new List<GalleryImageItem>();
+        List<GalleryImageItem> images;
 
-        await foreach (var blobItem in _containerClient.GetBlobsAsync(
-            new GetBlobsOptions
-            {
-                Traits = BlobTraits.Metadata
-            },
-            cancellationToken: cancellationToken))
+        if (_cache is not null && DateTimeOffset.UtcNow < _cacheExpiry)
         {
-            var fileName = blobItem.Metadata.TryGetValue(OriginalFileNameMetadataKey, out var originalFileName)
-                ? originalFileName
-                : blobItem.Name;
+            images = _cache;
+        }
+        else
+        {
+            images = [];
 
-            images.Add(
-                new GalleryImageItem(
+            await foreach (var blobItem in _containerClient.GetBlobsAsync(
+                new GetBlobsOptions { Traits = BlobTraits.Metadata },
+                cancellationToken: cancellationToken))
+            {
+                var fileName = blobItem.Metadata.TryGetValue(OriginalFileNameMetadataKey, out var originalFileName)
+                    ? originalFileName
+                    : blobItem.Name;
+
+                images.Add(new GalleryImageItem(
                     blobItem.Name,
                     fileName,
                     blobItem.Properties.ContentType ?? "application/octet-stream",
                     blobItem.Properties.ContentLength ?? 0,
                     blobItem.Properties.LastModified ?? DateTimeOffset.MinValue));
+            }
+
+            _cache = images;
+            _cacheExpiry = DateTimeOffset.UtcNow.AddMinutes(2);
         }
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))

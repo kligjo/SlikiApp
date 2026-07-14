@@ -49,7 +49,7 @@ else
                     aria-label="@image.FileName">
                 @if (image.ContentType.StartsWith("video/"))
                 {
-                    <video src="@GetImageUrl(image.BlobName)" class="photo-thumb" preload="metadata" muted playsinline></video>
+                    <video src="@GetImageUrl(image.BlobName)" class="photo-thumb" preload="none" muted playsinline></video>
                     <span class="photo-tile__play" aria-hidden="true"></span>
                 }
                 else
