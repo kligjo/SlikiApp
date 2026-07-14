@@ -29,7 +29,24 @@ public sealed class ImageFileValidator
 
     public int PageSize => _options.PageSize;
 
-    public string AcceptAttributeValue => string.Join(",", _allowedMimeTypes);
+    private static readonly Dictionary<string, string> MimeToExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["image/jpeg"]       = ".jpg,.jpeg",
+        ["image/png"]        = ".png",
+        ["image/gif"]        = ".gif",
+        ["image/webp"]       = ".webp",
+        ["image/bmp"]        = ".bmp",
+        ["video/mp4"]        = ".mp4,.m4v",
+        ["video/quicktime"]  = ".mov",
+        ["video/webm"]       = ".webm",
+        ["video/x-msvideo"]  = ".avi",
+    };
+
+    public string AcceptAttributeValue =>
+        string.Join(",", _allowedMimeTypes
+            .SelectMany(m => MimeToExtensions.TryGetValue(m, out var ext)
+                ? [m, ext]
+                : (IEnumerable<string>)[m]));
 
     public ImageValidationResult Validate(
         string fileName,
