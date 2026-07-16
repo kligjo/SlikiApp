@@ -25,9 +25,30 @@ public sealed class ImageFileValidator
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
+    private static readonly Dictionary<string, string> MimeToExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["image/jpeg"]      = ".jpg,.jpeg",
+        ["image/png"]       = ".png",
+        ["image/gif"]       = ".gif",
+        ["image/webp"]      = ".webp",
+        ["image/bmp"]       = ".bmp",
+        ["image/heic"]      = ".heic",
+        ["image/heif"]      = ".heif",
+        ["video/mp4"]       = ".mp4,.m4v",
+        ["video/quicktime"] = ".mov",
+        ["video/webm"]      = ".webm",
+        ["video/x-msvideo"] = ".avi",
+    };
+
     public long MaxUploadBytes => _options.MaxUploadBytes;
 
     public int PageSize => _options.PageSize;
+
+    public string AcceptAttributeValue =>
+        string.Join(",", _allowedMimeTypes
+            .SelectMany(m => MimeToExtensions.TryGetValue(m, out var ext)
+                ? (IEnumerable<string>)[m, ext]
+                : [m]));
 
     public ImageValidationResult Validate(
         string fileName,
@@ -159,13 +180,24 @@ public sealed class ImageFileValidator
             return true;
         }
 
-        // MP4 / MOV — ISO base media file format (ftyp box at offset 4)
+        // HEIC / HEIF — ftyp box with HEIC/HEIF brands
         if (headerBytes.Length >= 12
             && headerBytes[4..8].SequenceEqual("ftyp"u8))
         {
-            mimeType = headerBytes[8..12].SequenceEqual("qt  "u8)
-                ? "video/quicktime"
-                : "video/mp4";
+            var brand = headerBytes[8..12];
+            if (brand.SequenceEqual("heic"u8) || brand.SequenceEqual("heix"u8) ||
+                brand.SequenceEqual("hevc"u8) || brand.SequenceEqual("hevx"u8))
+            {
+                mimeType = "image/heic";
+                return true;
+            }
+            if (brand.SequenceEqual("mif1"u8) || brand.SequenceEqual("msf1"u8))
+            {
+                mimeType = "image/heif";
+                return true;
+            }
+            // MOV / MP4
+            mimeType = brand.SequenceEqual("qt  "u8) ? "video/quicktime" : "video/mp4";
             return true;
         }
 

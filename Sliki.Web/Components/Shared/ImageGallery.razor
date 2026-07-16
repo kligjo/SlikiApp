@@ -151,6 +151,7 @@ else
             _dotNetRef = DotNetObjectReference.Create(this);
             await JS.InvokeVoidAsync("slikiGallery.initInfiniteScroll", _dotNetRef);
         }
+        await JS.InvokeVoidAsync("slikiGallery.generateVideoThumbnails");
     }
 
     [JSInvokable]

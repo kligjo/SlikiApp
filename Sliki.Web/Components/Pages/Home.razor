@@ -1,4 +1,7 @@
 @page "/"
+@rendermode InteractiveServer
+
+@using Sliki.Web.Components.Shared
 
 <PageTitle>Sliki</PageTitle>
 
@@ -9,27 +12,20 @@
         <p class="hero-copy">
             Прикачете ги вашите фотографии и видеа за заедно да ги зачуваме сите прекрасни спомени. ❤️
         </p>
-        <div class="hero-actions">
-            <a class="btn btn-primary" href="/upload">Прикачи фотографии и видеа</a>
-            <a class="btn btn-outline-primary" href="/gallery">Прегледај галерија</a>
-        </div>
     </div>
 </section>
-
-@* <section class="dashboard-grid">
-    <article class="surface-card">
-        <h2>Upload flow</h2>
-        <p>Select one or more JPEG, PNG, GIF, WebP, or BMP files, preview them before upload, and send them to Azure Blob Storage with live progress per file.</p>
-    </article>
-
-    <article class="surface-card">
-        <h2>Storage security</h2>
-        <p>The storage container stays private. Reads and writes go through the app, and Azure authentication uses <strong>DefaultAzureCredential</strong> so Managed Identity works in App Service without secrets.</p>
-    </article>
-
-    <article class="surface-card">
-        <h2>Gallery features</h2>
-        <p>Browse uploaded images with paging, file-name filtering, date or name sorting, and a full-size preview dialog.</p>
-    </article>
+<section class="home-section">
+    <h1 class="section-title">AFTER HERE</h1>
+    <div class="map-wrapper">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3019.036188543666!2d20.81677872313969!3d41.1045441761556!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1350dbb5377ef5c3%3A0xf12be018ed556603!2sRebel%20Ohrid!5e1!3m2!1sen!2smk!4v1784225675963!5m2!1sen!2smk" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
 </section>
- *@
+<section class="home-section" id="upload">
+    <h2 class="section-title">Прикачи фотографии и видеа</h2>
+    <ImageUploader />
+</section>
+
+<section class="home-section" id="gallery">
+    <h2 class="section-title">Галерија</h2>
+    <ImageGallery />
+</section>

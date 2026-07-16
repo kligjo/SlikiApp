@@ -1,21 +1,13 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    <header class="top-bar">
+        <a class="app-brand" href="/">Sliki</a>
+        <span class="status-dot" aria-hidden="true"></span>
+    </header>
 
-    <main>
-        <div class="top-row px-4">
-            <div class="app-summary">
-                <span class="status-dot" aria-hidden="true"></span>
-                Private Azure Blob Storage via Managed Identity
-            </div>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="content px-4">
+        @Body
     </main>
 </div>
 

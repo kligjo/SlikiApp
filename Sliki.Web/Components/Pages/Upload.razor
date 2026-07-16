@@ -1,11 +1,6 @@
 @page "/upload"
-@rendermode InteractiveServer
+@inject NavigationManager Nav
 
-<PageTitle>Upload images</PageTitle>
-
-<div class="page-heading">
-    <h1>Upload images</h1>
-    <p>Select one or more supported image files, preview them, and upload to the private <code>sliki</code> container.</p>
-</div>
-
-<ImageUploader />
+@code {
+    protected override void OnInitialized() => Nav.NavigateTo("/", replace: true);
+}

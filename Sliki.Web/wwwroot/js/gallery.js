@@ -63,6 +63,51 @@ window.slikiGallery = {
         for (const url of urls) { if (url) URL.revokeObjectURL(url); }
     },
 
+    generateVideoThumbnails() {
+        if (!this._thumbObserver) {
+            this._thumbObserver = new IntersectionObserver(entries => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+                    const video = entry.target;
+                    if (video.dataset.thumbDone) continue;
+                    video.dataset.thumbDone = '1';
+                    this._thumbObserver.unobserve(video);
+                    this._captureVideoThumb(video);
+                }
+            }, { rootMargin: '400px' });
+        }
+        for (const video of document.querySelectorAll('.photo-grid video.photo-thumb')) {
+            if (!video.dataset.thumbDone) {
+                this._thumbObserver.observe(video);
+            }
+        }
+    },
+
+    _captureVideoThumb(video) {
+        const src = video.src;
+        if (!src) return;
+        const tmp = document.createElement('video');
+        tmp.muted = true;
+        tmp.playsInline = true;
+        tmp.preload = 'metadata';
+        tmp.src = src;
+        tmp.addEventListener('loadedmetadata', () => {
+            tmp.currentTime = tmp.duration > 1 ? 1 : 0.01;
+        }, { once: true });
+        tmp.addEventListener('seeked', () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = tmp.videoWidth || 320;
+                canvas.height = tmp.videoHeight || 180;
+                canvas.getContext('2d').drawImage(tmp, 0, 0, canvas.width, canvas.height);
+                video.poster = canvas.toDataURL('image/jpeg', 0.75);
+            } catch (_) {}
+            tmp.src = '';
+            tmp.load();
+        }, { once: true });
+        tmp.load();
+    },
+
     initInfiniteScroll(dotnetRef) {
         this.disposeInfiniteScroll();
         const sentinel = document.getElementById('scroll-sentinel');
