@@ -14,6 +14,8 @@ public sealed class BlobStorageOptions
 
     public int PageSize { get; set; } = 12;
 
+    public string ThumbnailDirectory { get; set; } = string.Empty;
+
     public List<string> AllowedMimeTypes { get; set; } =
     [
         "image/jpeg",

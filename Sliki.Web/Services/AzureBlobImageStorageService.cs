@@ -14,6 +14,8 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
 
     private readonly BlobContainerClient _containerClient;
     private readonly BlobStorageOptions _options;
+    private readonly SemaphoreSlim _containerInitLock = new(1, 1);
+    private bool _containerExists;
     private List<GalleryImageItem>? _cache;
     private DateTimeOffset _cacheExpiry;
 
@@ -141,12 +143,12 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
             return null;
         }
 
-        await EnsureContainerExistsAsync(cancellationToken);
-
-        var blobClient = _containerClient.GetBlobClient(blobName);
-
         try
         {
+                await EnsureContainerExistsAsync(cancellationToken);
+
+            var blobClient = _containerClient.GetBlobClient(blobName);
+
             var properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
             var stream = await blobClient.OpenReadAsync(cancellationToken: cancellationToken);
             var fileName = properties.Value.Metadata.TryGetValue(OriginalFileNameMetadataKey, out var originalFileName)
@@ -164,8 +166,35 @@ public sealed class AzureBlobImageStorageService : IImageStorageService
         {
             return null;
         }
+        catch (OperationCanceledException)
+        {
+            // Client canceled the request (e.g., navigated away, closed browser, or timeout)
+            // This is expected behavior, especially for large video files
+            return null;
+        }
     }
 
-    private Task EnsureContainerExistsAsync(CancellationToken cancellationToken) =>
-        _containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+    private async Task EnsureContainerExistsAsync(CancellationToken cancellationToken)
+    {
+        if (_containerExists)
+        {
+            return;
+        }
+
+        await _containerInitLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_containerExists)
+            {
+                return;
+            }
+
+            await _containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+            _containerExists = true;
+        }
+        finally
+        {
+            _containerInitLock.Release();
+        }
+    }
 }

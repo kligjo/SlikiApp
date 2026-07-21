@@ -54,7 +54,7 @@ else
                 }
                 else
                 {
-                    <img src="@GetImageUrl(image.BlobName)" alt="@image.FileName" loading="lazy" class="photo-thumb" />
+                    <img src="@GetThumbUrl(image.BlobName)" alt="@image.FileName" loading="lazy" class="photo-thumb" />
                 }
                 @if (SelectMode)
                 {
@@ -256,6 +256,9 @@ else
 
     private string GetImageUrl(string blobName) =>
         $"/images/{Uri.EscapeDataString(blobName)}";
+
+    private string GetThumbUrl(string blobName) =>
+        $"/thumbs/{Uri.EscapeDataString(blobName)}";
 
     public async ValueTask DisposeAsync()
     {

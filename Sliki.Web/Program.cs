@@ -39,6 +39,7 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddSingleton<ImageFileValidator>();
 builder.Services.AddSingleton<IImageStorageService, AzureBlobImageStorageService>();
+builder.Services.AddSingleton<ThumbnailService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -56,6 +57,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+// Full-resolution image proxy (used by lightbox only)
 app.MapGet(
     "/images/{blobName}",
     async Task<IResult> (string blobName, IImageStorageService imageStorageService, CancellationToken cancellationToken) =>
@@ -72,34 +74,80 @@ app.MapGet(
                 enableRangeProcessing: true);
     });
 
+// Thumbnail endpoint — serves local cached JPEG, generating on first access
+app.MapGet(
+    "/thumbs/{blobName}",
+    async Task<IResult> (
+        string blobName,
+        ThumbnailService thumbnailService,
+        IImageStorageService imageStorageService,
+        CancellationToken cancellationToken) =>
+    {
+        // Basic path traversal guard
+        if (string.IsNullOrWhiteSpace(blobName) || blobName != Path.GetFileName(blobName))
+            return Results.BadRequest();
+
+        if (!thumbnailService.Exists(blobName))
+        {
+            var download = await imageStorageService.OpenReadAsync(blobName, cancellationToken);
+            if (download is null) return Results.NotFound();
+
+            // Videos have no server-side thumbnail — JS canvas handles those
+            if (download.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            {
+                await download.Content.DisposeAsync();
+                return Results.NotFound();
+            }
+
+            await using var ms = new MemoryStream();
+            try
+            {
+
+                await download.Content.CopyToAsync(ms, cancellationToken);
+                await download.Content.DisposeAsync();
+            }
+            catch { }
+
+            var ok = await thumbnailService.GenerateAsync(ms, blobName, cancellationToken);
+            if (!ok)
+            {
+                // Generation failed (e.g. unsupported format) — stream back the original
+                ms.Position = 0;
+                return Results.File(ms, download.ContentType);
+            }
+        }
+
+        var thumbPath = thumbnailService.ThumbPath(blobName);
+        return Results.File(
+            thumbPath,
+            "image/jpeg",
+            lastModified: File.GetLastWriteTimeUtc(thumbPath),
+            entityTag: new EntityTagHeaderValue($"\"{blobName.GetHashCode():x8}\""));
+    });
+
 app.MapPost(
         "/api/images/upload",
         async Task<IResult> (
             HttpRequest request,
             IImageStorageService imageStorageService,
             ImageFileValidator imageFileValidator,
+            ThumbnailService thumbnailService,
             CancellationToken cancellationToken) =>
         {
             var form = await request.ReadFormAsync(cancellationToken);
             var file = form.Files["file"] ?? form.Files.FirstOrDefault();
 
             if (file is null)
-            {
                 return Results.BadRequest(new { error = "Select an image file to upload." });
-            }
 
             if (file.Length <= 0)
-            {
                 return Results.BadRequest(new { error = "The selected file is empty." });
-            }
 
             if (file.Length > imageFileValidator.MaxUploadBytes)
-            {
                 return Results.BadRequest(new
                 {
                     error = $"The file exceeds the limit of {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)}."
                 });
-            }
 
             await using var uploadedFileStream = file.OpenReadStream();
             await using var memoryStream = new MemoryStream(capacity: file.Length > int.MaxValue ? int.MaxValue : (int)file.Length);
@@ -108,9 +156,7 @@ app.MapPost(
 
             byte[] headerBytes;
             if (memoryStream.TryGetBuffer(out var buffer))
-            {
                 headerBytes = buffer.AsSpan(0, (int)Math.Min(memoryStream.Length, 32)).ToArray();
-            }
             else
             {
                 var bytes = memoryStream.ToArray();
@@ -119,9 +165,7 @@ app.MapPost(
 
             var validation = imageFileValidator.Validate(file.FileName, file.ContentType, file.Length, headerBytes);
             if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
-            {
                 return Results.BadRequest(new { error = validation.ErrorMessage ?? "The image failed validation." });
-            }
 
             memoryStream.Position = 0;
             var result = await imageStorageService.UploadAsync(
@@ -132,6 +176,12 @@ app.MapPost(
                     memoryStream),
                 progress: null,
                 cancellationToken);
+
+            // Generate thumbnail immediately while we still have the bytes in memory
+            if (!validation.NormalizedContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            {
+                await thumbnailService.GenerateAsync(memoryStream, result.BlobName, cancellationToken);
+            }
 
             return Results.Ok(result);
         })
