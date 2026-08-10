@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sliki-web
+description: Sliki web app on AKS (parallel demo path, alongside the App Service deployment)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

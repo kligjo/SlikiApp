@@ -1,0 +1,116 @@
+name: Build and deploy Sliki to AKS (demo)
+
+# Manual only - separate, optional path alongside the App Service deployment
+# in deploy-azure.yml. Does not run on push and does not touch that workflow
+# or infra/main.bicep. Provisions its own resource group (AI200AKSdemi) with
+# a demo ACR + AKS cluster from infra/aks-demo.bicep, then builds and deploys
+# the app into it via Helm.
+#
+# Required GitHub secrets (shared with deploy-azure.yml): AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+# That OIDC identity needs Contributor + User Access Administrator on the
+# subscription (or at least rights to create resource groups and role
+# assignments), since this workflow provisions the resource group itself.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  RESOURCE_GROUP: AI200AKSdemi
+  LOCATION: westeurope
+  IMAGE_NAME: sliki-web
+
+jobs:
+  provision_infrastructure:
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      acr_name: ${{ steps.deploy.outputs.acr_name }}
+      aks_name: ${{ steps.deploy.outputs.aks_name }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name "$RESOURCE_GROUP" \
+            --location "$LOCATION" \
+            --output none
+
+      - name: Resolve pipeline identity object ID
+        id: identity
+        run: |
+          object_id=$(az ad sp show --id "${{ secrets.AZURE_CLIENT_ID }}" --query id -o tsv)
+          echo "object_id=$object_id" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy infrastructure
+        id: deploy
+        run: |
+          deployment_outputs=$(az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file ./infra/aks-demo.bicep \
+            --parameters location="$LOCATION" githubActionsPrincipalId="${{ steps.identity.outputs.object_id }}" \
+            --query "properties.outputs" \
+            --output json)
+
+          acr_name=$(python3 -c "import json,sys; print(json.load(sys.stdin)['acrName']['value'])" <<< "$deployment_outputs")
+          aks_name=$(python3 -c "import json,sys; print(json.load(sys.stdin)['aksClusterName']['value'])" <<< "$deployment_outputs")
+
+          echo "acr_name=$acr_name" >> "$GITHUB_OUTPUT"
+          echo "aks_name=$aks_name" >> "$GITHUB_OUTPUT"
+
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    needs: provision_infrastructure
+    environment: production
+
+    env:
+      ACR_NAME: ${{ needs.provision_infrastructure.outputs.acr_name }}
+      AKS_NAME: ${{ needs.provision_infrastructure.outputs.aks_name }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push image with ACR Tasks
+        run: |
+          az acr build \
+            --registry "$ACR_NAME" \
+            --image "$IMAGE_NAME:${{ github.sha }}" \
+            --file Sliki.Web/Dockerfile \
+            .
+
+      - name: Get AKS credentials
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.AKS_NAME }}
+          admin: true
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm upgrade --install
+        run: |
+          helm upgrade --install sliki-web ./charts/sliki-web \
+            --set image.repository="${ACR_NAME}.azurecr.io/${IMAGE_NAME}" \
+            --set image.tag="${{ github.sha }}"
