@@ -26,6 +26,10 @@ env:
   ASPNETCORE_ENVIRONMENT: Production
   BlobStorage__MaxUploadBytes: "10485760"
   BlobStorage__PageSize: "12"
+  # No TLS on the demo LoadBalancer Service - skip the app's HTTP->HTTPS redirect
+  # so the plain-HTTP demo URL actually works. Production (App Service) is HTTPS-only
+  # and never sets this, so its redirect behavior is unchanged.
+  DisableHttpsRedirect: "true"
 
 # Not wired up yet: the App Service deployment uses system-assigned managed identity
 # for passwordless blob access (Storage Blob Data Contributor). Reproducing that on
