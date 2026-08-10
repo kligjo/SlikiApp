@@ -1,0 +1,33 @@
+replicaCount: 2
+
+image:
+  repository: ""   # set via --set image.repository=<acr>.azurecr.io/sliki-web
+  tag: ""           # set via --set image.tag=<git-sha-or-version>
+  pullPolicy: IfNotPresent
+
+containerPort: 8080
+
+service:
+  type: LoadBalancer
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Plain (non-secret) app settings. Mirrors infra/main.bicep's App Service settings,
+# minus BlobStorage__ServiceUri/ContainerName which are demo-environment-specific
+# and should be set with --set or a separate values file per environment.
+env:
+  ASPNETCORE_ENVIRONMENT: Production
+  BlobStorage__MaxUploadBytes: "10485760"
+  BlobStorage__PageSize: "12"
+
+# Not wired up yet: the App Service deployment uses system-assigned managed identity
+# for passwordless blob access (Storage Blob Data Contributor). Reproducing that on
+# AKS needs Microsoft Entra Workload Identity (OIDC federation to a k8s service
+# account) - out of scope for this basic demo chart.
