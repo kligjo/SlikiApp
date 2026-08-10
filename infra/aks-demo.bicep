@@ -17,7 +17,7 @@ param location string = 'westeurope'
 param nodeCount int = 2
 
 @description('VM size for AKS nodes.')
-param nodeVmSize string = 'Standard_DS2_v2'
+param nodeVmSize string = 'Standard_D2s_v5'
 
 @description('ACR SKU.')
 @allowed([
