@@ -1,0 +1,29 @@
+@page "/slikar"
+@rendermode InteractiveServer
+
+@using Sliki.Web.Components.Shared
+@using Sliki.Web.Services
+
+@inject ISlikarStorageService SlikarStorage
+
+<PageTitle>Slikar</PageTitle>
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Slikar</p>
+        <h1>Прикачете ги вашите слики.</h1>
+        <p class="hero-copy">Bulk прикачување — до 3 000 фотографии одеднаш.</p>
+    </div>
+</section>
+
+<section class="home-section" id="upload">
+    <h2 class="section-title">Прикачи фотографии</h2>
+    <SlikarUploader />
+</section>
+
+<section class="home-section" id="gallery">
+    <h2 class="section-title">Галерија</h2>
+    <ImageGallery StorageOverride="SlikarStorage"
+                  ImageUrlBase="/slikar/images"
+                  ThumbUrlBase="/slikar/thumbs" />
+</section>

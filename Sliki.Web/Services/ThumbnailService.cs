@@ -35,16 +35,21 @@ public sealed class ThumbnailService
         Directory.CreateDirectory(_thumbDir);
     }
 
-    public string ThumbPath(string blobName) =>
-        Path.Combine(_thumbDir, blobName + ".jpg");
+    public string ThumbPath(string blobName, string subfolder = "") =>
+        string.IsNullOrEmpty(subfolder)
+            ? Path.Combine(_thumbDir, blobName + ".jpg")
+            : Path.Combine(_thumbDir, subfolder, blobName + ".jpg");
 
-    public bool Exists(string blobName) =>
-        File.Exists(ThumbPath(blobName));
+    public bool Exists(string blobName, string subfolder = "") =>
+        File.Exists(ThumbPath(blobName, subfolder));
 
-    public async Task<bool> GenerateAsync(Stream source, string blobName, CancellationToken cancellationToken = default)
+    public async Task<bool> GenerateAsync(Stream source, string blobName, string subfolder = "", CancellationToken cancellationToken = default)
     {
         try
         {
+            if (!string.IsNullOrEmpty(subfolder))
+                Directory.CreateDirectory(Path.Combine(_thumbDir, subfolder));
+
             source.Position = 0;
             using var image = await Image.LoadAsync(source, cancellationToken);
 
@@ -54,7 +59,7 @@ public sealed class ThumbnailService
                 image.Mutate(x => x.Resize(ThumbWidth, height));
             }
 
-            var thumbPath = ThumbPath(blobName);
+            var thumbPath = ThumbPath(blobName, subfolder);
             await image.SaveAsJpegAsync(thumbPath, new JpegEncoder { Quality = 72 }, cancellationToken);
             return true;
         }

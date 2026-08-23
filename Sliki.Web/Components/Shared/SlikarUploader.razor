@@ -1,0 +1,175 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILogger<SlikarUploader> Logger
+
+@if (!string.IsNullOrWhiteSpace(_statusMessage))
+{
+    <div class="alert alert-success" role="status">@_statusMessage</div>
+}
+
+<section class="surface-card">
+    <div class="section-header">
+        <div>
+            <h2>Прикачи фотографии</h2>
+            <p class="section-copy">
+                Фотографии, видеа и ZIP архиви. До 3 000 фајлови одеднаш, прикачување паралелно — 5 истовремено.
+            </p>
+        </div>
+    </div>
+
+    <label class="form-label fw-semibold" for="slikar-upload-input">Изберете фотографии, видеа или ZIP</label>
+    <InputFile id="slikar-upload-input"
+               class="form-control"
+               multiple
+               accept="image/*,video/*,.heic,.heif,.zip"
+               OnChange="HandleFilesSelectedAsync" />
+
+    @if (_totalCount > 0)
+    {
+        <div class="bulk-summary">
+            <div class="progress mt-3" role="progressbar"
+                 aria-valuenow="@ProgressPercent" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar @(_failedCount > 0 ? "bg-warning" : "")"
+                     style="width: @ProgressPercent%">@ProgressPercent%</div>
+            </div>
+            <p class="bulk-counter">
+                <strong>@_doneCount</strong> / @_totalCount прикачено
+                @if (_failedCount > 0) { <span class="text-danger"> · @_failedCount неуспешно</span> }
+            </p>
+        </div>
+    }
+
+    <div class="upload-actions">
+        <button type="button" class="btn btn-primary"
+                @onclick="UploadAllAsync"
+                disabled="@(!CanUpload)">
+            @if (_uploading) { <span>Се прикачува…</span> } else { <span>Прикачи ги сите</span> }
+        </button>
+        <button type="button" class="btn btn-link"
+                @onclick="ClearAsync"
+                disabled="@(_uploading || _totalCount == 0)">
+            Исчисти
+        </button>
+    </div>
+</section>
+
+@code {
+    private const string FileInputId = "slikar-upload-input";
+    private const string UploadEndpoint = "/slikar/api/upload";
+    private const int Parallelism = 5;
+
+    private DotNetObjectReference<SlikarUploader>? _dotNetRef;
+    private readonly List<string> _fileIds = [];
+    private readonly Dictionary<string, TaskCompletionSource<(bool, string, string)>> _pending = [];
+
+    private int _totalCount;
+    private int _doneCount;
+    private int _failedCount;
+    private bool _uploading;
+    private string? _statusMessage;
+
+    private int ProgressPercent => _totalCount == 0 ? 0 : _doneCount * 100 / _totalCount;
+    private bool CanUpload => !_uploading && _totalCount > 0 && _doneCount < _totalCount;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    [JSInvokable]
+    public void OnSlikarDone(string fileId, bool success, string response, string error)
+    {
+        if (_pending.TryGetValue(fileId, out var tcs))
+            tcs.TrySetResult((success, response, error));
+    }
+
+    private async Task HandleFilesSelectedAsync(InputFileChangeEventArgs args)
+    {
+        _statusMessage = null;
+        _doneCount = 0;
+        _failedCount = 0;
+
+        // Release any previously registered files
+        if (_fileIds.Count > 0)
+        {
+            await JS.InvokeVoidAsync("slikiGallery.releaseFiles", (object)_fileIds.ToArray());
+            _fileIds.Clear();
+        }
+
+        if (args.FileCount == 0) { _totalCount = 0; return; }
+
+        // Register without preview URLs — no need for 3000 object URLs in memory
+        var jsFiles = await JS.InvokeAsync<JsFileInfo[]>("slikiGallery.registerFiles", FileInputId, false);
+        _fileIds.AddRange(jsFiles.Select(f => f.Id));
+        _totalCount = _fileIds.Count;
+    }
+
+    private async Task UploadAllAsync()
+    {
+        if (!CanUpload) return;
+        _uploading = true;
+        _doneCount = 0;
+        _failedCount = 0;
+        _statusMessage = null;
+
+        var semaphore = new SemaphoreSlim(Parallelism, Parallelism);
+        var tasks = _fileIds.Select(id => UploadOneAsync(id, semaphore)).ToList();
+        await Task.WhenAll(tasks);
+
+        _uploading = false;
+        _statusMessage = _failedCount == 0
+            ? $"{_doneCount} фотографии прикачени успешно."
+            : $"{_doneCount} прикачени, {_failedCount} неуспешно.";
+    }
+
+    private async Task UploadOneAsync(string fileId, SemaphoreSlim semaphore)
+    {
+        await semaphore.WaitAsync();
+        try
+        {
+            var tcs = new TaskCompletionSource<(bool, string, string)>();
+            _pending[fileId] = tcs;
+
+            await JS.InvokeVoidAsync("slikiGallery.uploadFileParallel", fileId, _dotNetRef, UploadEndpoint);
+            var (success, _, _) = await tcs.Task;
+
+            if (success) Interlocked.Increment(ref _doneCount);
+            else         Interlocked.Increment(ref _failedCount);
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Upload failed for file {FileId}", fileId);
+            Interlocked.Increment(ref _failedCount);
+        }
+        finally
+        {
+            _pending.Remove(fileId);
+            semaphore.Release();
+        }
+    }
+
+    private async Task ClearAsync()
+    {
+        if (_fileIds.Count > 0)
+            await JS.InvokeVoidAsync("slikiGallery.releaseFiles", (object)_fileIds.ToArray());
+        _fileIds.Clear();
+        _totalCount = 0;
+        _doneCount = 0;
+        _failedCount = 0;
+        _statusMessage = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_fileIds.Count > 0)
+        {
+            try { await JS.InvokeVoidAsync("slikiGallery.releaseFiles", (object)_fileIds.ToArray()); } catch { }
+        }
+        _dotNetRef?.Dispose();
+    }
+
+    private sealed record JsFileInfo(string Id, string? PreviewUrl, string Name, long Size, string Type);
+}

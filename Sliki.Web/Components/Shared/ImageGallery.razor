@@ -1,5 +1,5 @@
 @implements IAsyncDisposable
-@inject IImageStorageService ImageStorageService
+@inject IImageStorageService _defaultStorage
 @inject ImageFileValidator ImageFileValidator
 @inject IJSRuntime JS
 
@@ -124,6 +124,12 @@ else
 }
 
 @code {
+    [Parameter] public IImageStorageService? StorageOverride { get; set; }
+    [Parameter] public string ImageUrlBase { get; set; } = "/images";
+    [Parameter] public string ThumbUrlBase { get; set; } = "/thumbs";
+
+    private IImageStorageService ImageStorageService => StorageOverride ?? _defaultStorage;
+
     private const int BatchSize = 100;
 
     private List<GalleryImageItem> _allImages = [];
@@ -255,10 +261,10 @@ else
     }
 
     private string GetImageUrl(string blobName) =>
-        $"/images/{Uri.EscapeDataString(blobName)}";
+        $"{ImageUrlBase}/{Uri.EscapeDataString(blobName)}";
 
     private string GetThumbUrl(string blobName) =>
-        $"/thumbs/{Uri.EscapeDataString(blobName)}";
+        $"{ThumbUrlBase}/{Uri.EscapeDataString(blobName)}";
 
     public async ValueTask DisposeAsync()
     {

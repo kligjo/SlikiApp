@@ -38,6 +38,7 @@ public sealed class ImageFileValidator
         ["video/quicktime"] = ".mov",
         ["video/webm"]      = ".webm",
         ["video/x-msvideo"] = ".avi",
+        ["application/zip"] = ".zip",
     };
 
     public long MaxUploadBytes => _options.MaxUploadBytes;
@@ -198,6 +199,17 @@ public sealed class ImageFileValidator
             }
             // MOV / MP4
             mimeType = brand.SequenceEqual("qt  "u8) ? "video/quicktime" : "video/mp4";
+            return true;
+        }
+
+        // ZIP
+        if (headerBytes.Length >= 4
+            && headerBytes[0] == 0x50
+            && headerBytes[1] == 0x4B
+            && headerBytes[2] == 0x03
+            && headerBytes[3] == 0x04)
+        {
+            mimeType = "application/zip";
             return true;
         }
 

@@ -10,7 +10,7 @@ window.slikiGallery = {
         document.body.removeChild(a);
     },
 
-    registerFiles(inputId) {
+    registerFiles(inputId, generatePreviews = true) {
         const input = document.getElementById(inputId);
         if (!input?.files) return [];
         const result = [];
@@ -19,7 +19,7 @@ window.slikiGallery = {
             this._fileRegistry.set(id, file);
             result.push({
                 id,
-                previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+                previewUrl: generatePreviews && file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
                 name: file.name,
                 size: file.size,
                 type: file.type || 'application/octet-stream'
@@ -52,6 +52,31 @@ window.slikiGallery = {
             }
         };
         xhr.onerror = () => dotnetRef.invokeMethodAsync('OnUploadDone', false, '', 'Network error.');
+        xhr.send(formData);
+    },
+
+    // Parallel-upload variant — passes fileId back in callbacks so multiple
+    // in-flight uploads can be tracked independently.
+    uploadFileParallel(fileId, dotnetRef, endpoint) {
+        const file = this._fileRegistry.get(fileId);
+        if (!file) {
+            dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', 'File reference lost — please re-select.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint);
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, true, xhr.responseText, '');
+            } else {
+                let error = 'Upload failed.';
+                try { error = JSON.parse(xhr.responseText).error || error; } catch {}
+                dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', error);
+            }
+        };
+        xhr.onerror = () => dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', 'Network error.');
         xhr.send(formData);
     },
 

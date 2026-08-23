@@ -39,7 +39,10 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddSingleton<ImageFileValidator>();
 builder.Services.AddSingleton<IImageStorageService, AzureBlobImageStorageService>();
+builder.Services.AddSingleton<ISlikarStorageService, SlikarStorageService>();
 builder.Services.AddSingleton<ThumbnailService>();
+builder.Services.AddSingleton<ThumbnailQueue>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ThumbnailQueue>());
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -95,8 +98,9 @@ app.MapGet(
             var download = await imageStorageService.OpenReadAsync(blobName, cancellationToken);
             if (download is null) return Results.NotFound();
 
-            // Videos have no server-side thumbnail — JS canvas handles those
-            if (download.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            // Videos and ZIPs have no server-side thumbnail
+            if (download.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                || download.ContentType == "application/zip")
             {
                 await download.Content.DisposeAsync();
                 return Results.NotFound();
@@ -111,7 +115,7 @@ app.MapGet(
             }
             catch { }
 
-            var ok = await thumbnailService.GenerateAsync(ms, blobName, cancellationToken);
+            var ok = await thumbnailService.GenerateAsync(ms, blobName, "", cancellationToken);
             if (!ok)
             {
                 // Generation failed (e.g. unsupported format) — stream back the original
@@ -128,13 +132,123 @@ app.MapGet(
             entityTag: new EntityTagHeaderValue($"\"{blobName.GetHashCode():x8}\""));
     });
 
+// ── Slikar container endpoints ────────────────────────────────────────────────
+
+app.MapGet(
+    "/slikar/images/{blobName}",
+    async Task<IResult> (string blobName, ISlikarStorageService storage, CancellationToken ct) =>
+    {
+        var image = await storage.OpenReadAsync(blobName, ct);
+        return image is null
+            ? Results.NotFound()
+            : Results.File(image.Content, image.ContentType,
+                lastModified: image.LastModified,
+                entityTag: EntityTagHeaderValue.Parse(image.ETag),
+                enableRangeProcessing: true);
+    });
+
+app.MapGet(
+    "/slikar/thumbs/{blobName}",
+    async Task<IResult> (
+        string blobName,
+        ThumbnailService thumbnailService,
+        ISlikarStorageService storage,
+        CancellationToken ct) =>
+    {
+        if (string.IsNullOrWhiteSpace(blobName) || blobName != Path.GetFileName(blobName))
+            return Results.BadRequest();
+
+        if (!thumbnailService.Exists(blobName, "slikar"))
+        {
+            var download = await storage.OpenReadAsync(blobName, ct);
+            if (download is null) return Results.NotFound();
+
+            if (download.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                || download.ContentType == "application/zip")
+            {
+                await download.Content.DisposeAsync();
+                return Results.NotFound();
+            }
+
+            await using var ms = new MemoryStream();
+            await download.Content.CopyToAsync(ms, ct);
+            await download.Content.DisposeAsync();
+
+            var ok = await thumbnailService.GenerateAsync(ms, blobName, "slikar", ct);
+            if (!ok)
+            {
+                ms.Position = 0;
+                return Results.File(ms, "image/jpeg");
+            }
+        }
+
+        var thumbPath = thumbnailService.ThumbPath(blobName, "slikar");
+        return Results.File(thumbPath, "image/jpeg",
+            lastModified: File.GetLastWriteTimeUtc(thumbPath),
+            entityTag: new EntityTagHeaderValue($"\"{("slikar/" + blobName).GetHashCode():x8}\""));
+    });
+
+app.MapPost(
+        "/slikar/api/upload",
+        async Task<IResult> (
+            HttpRequest request,
+            ISlikarStorageService storage,
+            ImageFileValidator imageFileValidator,
+            ThumbnailQueue thumbnailQueue,
+            CancellationToken ct) =>
+        {
+            var form = await request.ReadFormAsync(ct);
+            var file = form.Files["file"] ?? form.Files.FirstOrDefault();
+
+            if (file is null)  return Results.BadRequest(new { error = "Select a file to upload." });
+            if (file.Length <= 0) return Results.BadRequest(new { error = "The file is empty." });
+            if (file.Length > imageFileValidator.MaxUploadBytes)
+                return Results.BadRequest(new { error = $"Exceeds the {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)} limit." });
+
+            await using var uploadedStream = file.OpenReadStream();
+            await using var memStream = new MemoryStream(capacity: file.Length > int.MaxValue ? int.MaxValue : (int)file.Length);
+            await uploadedStream.CopyToAsync(memStream, ct);
+            memStream.Position = 0;
+
+            byte[] header;
+            if (memStream.TryGetBuffer(out var buf))
+                header = buf.AsSpan(0, (int)Math.Min(memStream.Length, 32)).ToArray();
+            else { var b = memStream.ToArray(); header = b.AsSpan(0, Math.Min(b.Length, 32)).ToArray(); }
+
+            var validation = imageFileValidator.Validate(file.FileName, file.ContentType, file.Length, header);
+            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
+                return Results.BadRequest(new { error = validation.ErrorMessage ?? "Validation failed." });
+
+            memStream.Position = 0;
+            var result = await storage.UploadAsync(
+                new UploadImageRequest(file.FileName, validation.NormalizedContentType, file.Length, memStream),
+                progress: null, ct);
+
+            // Enqueue thumbnail generation — does not block the upload response
+            var isImage = !validation.NormalizedContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                       && validation.NormalizedContentType != "application/zip";
+            if (isImage && memStream.TryGetBuffer(out var imgBuf))
+                await thumbnailQueue.EnqueueAsync(result.BlobName, "slikar", imgBuf.ToArray(), ct);
+
+            return Results.Ok(result);
+        })
+    .DisableAntiforgery()
+    .AddEndpointFilter(async (ctx, next) =>
+    {
+        var sf = ctx.HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
+        if (sf is { IsReadOnly: false }) sf.MaxRequestBodySize = null;
+        return await next(ctx);
+    });
+
+// ── End Slikar ────────────────────────────────────────────────────────────────
+
 app.MapPost(
         "/api/images/upload",
         async Task<IResult> (
             HttpRequest request,
             IImageStorageService imageStorageService,
             ImageFileValidator imageFileValidator,
-            ThumbnailService thumbnailService,
+            ThumbnailQueue thumbnailQueue,
             CancellationToken cancellationToken) =>
         {
             var form = await request.ReadFormAsync(cancellationToken);
@@ -180,10 +294,12 @@ app.MapPost(
                 progress: null,
                 cancellationToken);
 
-            // Generate thumbnail immediately while we still have the bytes in memory
-            if (!validation.NormalizedContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+            // Enqueue thumbnail — upload response is not blocked
+            if (!validation.NormalizedContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                && validation.NormalizedContentType != "application/zip"
+                && memoryStream.TryGetBuffer(out var imgBuffer))
             {
-                await thumbnailService.GenerateAsync(memoryStream, result.BlobName, cancellationToken);
+                await thumbnailQueue.EnqueueAsync(result.BlobName, "", imgBuffer.ToArray(), cancellationToken);
             }
 
             return Results.Ok(result);

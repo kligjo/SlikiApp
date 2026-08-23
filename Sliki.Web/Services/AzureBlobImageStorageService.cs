@@ -8,7 +8,7 @@ using Sliki.Web.Utilities;
 
 namespace Sliki.Web.Services;
 
-public sealed class AzureBlobImageStorageService : IImageStorageService
+public class AzureBlobImageStorageService : IImageStorageService
 {
     private const string OriginalFileNameMetadataKey = "originalfilename";
 
