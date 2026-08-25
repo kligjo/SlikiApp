@@ -12,4 +12,11 @@ public interface IImageStorageService
     Task<ImagePageResult> GetImagesAsync(ImageQuery query, CancellationToken cancellationToken);
 
     Task<BlobImageDownload?> OpenReadAsync(string blobName, CancellationToken cancellationToken);
+
+    Task<SasUploadTicket> GenerateSasUploadUrlAsync(
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken);
+
+    Task SetBlobOriginalFileNameAsync(string blobName, string fileName, CancellationToken cancellationToken);
 }

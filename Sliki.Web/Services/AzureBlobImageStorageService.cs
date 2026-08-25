@@ -1,6 +1,7 @@
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.Extensions.Options;
 using Sliki.Web.Models;
 using Sliki.Web.Options;
@@ -172,6 +173,73 @@ public class AzureBlobImageStorageService : IImageStorageService
             // This is expected behavior, especially for large video files
             return null;
         }
+    }
+
+    public async Task SetBlobOriginalFileNameAsync(string blobName, string fileName, CancellationToken cancellationToken)
+    {
+        var blobClient = _containerClient.GetBlobClient(blobName);
+        await blobClient.SetMetadataAsync(
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [OriginalFileNameMetadataKey] = fileName
+            },
+            cancellationToken: cancellationToken);
+        _cache = null;
+    }
+
+    public async Task<SasUploadTicket> GenerateSasUploadUrlAsync(
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        await EnsureContainerExistsAsync(cancellationToken);
+
+        var safeStem = FileNameSanitizer.SanitizeStem(Path.GetFileNameWithoutExtension(fileName));
+        var extension = FileNameSanitizer.GetExtensionForContentType(contentType)
+            ?? Path.GetExtension(fileName).ToLowerInvariant();
+        var safeDisplayName = FileNameSanitizer.SanitizeDisplayName($"{safeStem}{extension}");
+        var blobName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}-{safeStem}{extension}";
+
+        var blobClient = _containerClient.GetBlobClient(blobName);
+        var expiry = DateTimeOffset.UtcNow.AddHours(2);
+
+        Uri sasUri;
+
+        if (_containerClient.CanGenerateSasUri)
+        {
+            // Connection string path — account key available
+            var sasBuilder = new BlobSasBuilder(BlobSasPermissions.Write | BlobSasPermissions.Create, expiry)
+            {
+                BlobContainerName = _containerClient.Name,
+                BlobName = blobName,
+                Resource = "b",
+                ContentType = contentType
+            };
+            sasUri = blobClient.GenerateSasUri(sasBuilder);
+        }
+        else
+        {
+            // Managed Identity path — use User Delegation SAS
+            // Requires "Storage Blob Delegator" role on the storage account
+            var delegationKey = await _containerClient.GetParentBlobServiceClient()
+                .GetUserDelegationKeyAsync(DateTimeOffset.UtcNow.AddMinutes(-5), expiry, cancellationToken);
+
+            var sasBuilder = new BlobSasBuilder(BlobSasPermissions.Write | BlobSasPermissions.Create, expiry)
+            {
+                BlobContainerName = _containerClient.Name,
+                BlobName = blobName,
+                Resource = "b",
+                ContentType = contentType
+            };
+            var accountName = _containerClient.AccountName;
+            var sasParams = sasBuilder.ToSasQueryParameters(delegationKey, accountName);
+            var uriBuilder = new BlobUriBuilder(blobClient.Uri) { Sas = sasParams };
+            sasUri = uriBuilder.ToUri();
+        }
+
+        _cache = null;
+
+        return new SasUploadTicket(blobName, safeDisplayName, sasUri.ToString(), contentType);
     }
 
     private async Task EnsureContainerExistsAsync(CancellationToken cancellationToken)

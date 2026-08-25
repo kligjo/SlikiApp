@@ -188,57 +188,83 @@ app.MapGet(
             entityTag: new EntityTagHeaderValue($"\"{("slikar/" + blobName).GetHashCode():x8}\""));
     });
 
+// Issues a short-lived SAS URL so the client can PUT directly to blob storage.
+// The file never passes through the app server — no timeout, no memory pressure.
 app.MapPost(
-        "/slikar/api/upload",
+        "/slikar/api/sas",
         async Task<IResult> (
             HttpRequest request,
             ISlikarStorageService storage,
             ImageFileValidator imageFileValidator,
+            CancellationToken ct) =>
+        {
+            var form = await request.ReadFormAsync(ct);
+            var fileName = form["fileName"].ToString();
+            var contentType = form["contentType"].ToString();
+            if (!long.TryParse(form["size"], out var size))
+                return Results.BadRequest(new { error = "size is required." });
+
+            // Read the header bytes sent by the client for magic-byte validation
+            var headerBase64 = form["headerBase64"].ToString();
+            if (string.IsNullOrWhiteSpace(headerBase64))
+                return Results.BadRequest(new { error = "headerBase64 is required." });
+            byte[] header;
+            try { header = Convert.FromBase64String(headerBase64); }
+            catch { return Results.BadRequest(new { error = "Invalid headerBase64." }); }
+
+            if (size > imageFileValidator.MaxUploadBytes)
+                return Results.BadRequest(new { error = $"Exceeds the {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)} limit." });
+
+            var validation = imageFileValidator.Validate(fileName, contentType, size, header);
+            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
+                return Results.BadRequest(new { error = validation.ErrorMessage ?? "Validation failed." });
+
+            var ticket = await storage.GenerateSasUploadUrlAsync(fileName, validation.NormalizedContentType, ct);
+            return Results.Ok(ticket);
+        })
+    .DisableAntiforgery();
+
+// Called by the client after a successful direct-to-blob PUT, so the server can
+// set blob properties and enqueue thumbnail generation.
+app.MapPost(
+        "/slikar/api/complete",
+        async Task<IResult> (
+            HttpRequest request,
+            ISlikarStorageService storage,
             ThumbnailQueue thumbnailQueue,
             CancellationToken ct) =>
         {
             var form = await request.ReadFormAsync(ct);
-            var file = form.Files["file"] ?? form.Files.FirstOrDefault();
+            var blobName = form["blobName"].ToString();
+            var fileName = form["fileName"].ToString();
+            var contentType = form["contentType"].ToString();
 
-            if (file is null)  return Results.BadRequest(new { error = "Select a file to upload." });
-            if (file.Length <= 0) return Results.BadRequest(new { error = "The file is empty." });
-            if (file.Length > imageFileValidator.MaxUploadBytes)
-                return Results.BadRequest(new { error = $"Exceeds the {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)} limit." });
+            if (string.IsNullOrWhiteSpace(blobName) || blobName != Path.GetFileName(blobName))
+                return Results.BadRequest(new { error = "Invalid blobName." });
 
-            await using var uploadedStream = file.OpenReadStream();
-            await using var memStream = new MemoryStream(capacity: file.Length > int.MaxValue ? int.MaxValue : (int)file.Length);
-            await uploadedStream.CopyToAsync(memStream, ct);
-            memStream.Position = 0;
+            // Set the original filename metadata so the gallery can display it
+            if (!string.IsNullOrWhiteSpace(fileName))
+                await storage.SetBlobOriginalFileNameAsync(blobName, fileName, ct);
 
-            byte[] header;
-            if (memStream.TryGetBuffer(out var buf))
-                header = buf.AsSpan(0, (int)Math.Min(memStream.Length, 32)).ToArray();
-            else { var b = memStream.ToArray(); header = b.AsSpan(0, Math.Min(b.Length, 32)).ToArray(); }
+            // Enqueue thumbnail for images (not video/zip)
+            var isImage = !contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                       && contentType != "application/zip";
+            if (isImage)
+            {
+                var download = await storage.OpenReadAsync(blobName, ct);
+                if (download is not null)
+                {
+                    await using var ms = new MemoryStream();
+                    await download.Content.CopyToAsync(ms, ct);
+                    await download.Content.DisposeAsync();
+                    if (ms.TryGetBuffer(out var buf))
+                        await thumbnailQueue.EnqueueAsync(blobName, "slikar", buf.ToArray(), ct);
+                }
+            }
 
-            var validation = imageFileValidator.Validate(file.FileName, file.ContentType, file.Length, header);
-            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
-                return Results.BadRequest(new { error = validation.ErrorMessage ?? "Validation failed." });
-
-            memStream.Position = 0;
-            var result = await storage.UploadAsync(
-                new UploadImageRequest(file.FileName, validation.NormalizedContentType, file.Length, memStream),
-                progress: null, ct);
-
-            // Enqueue thumbnail generation — does not block the upload response
-            var isImage = !validation.NormalizedContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
-                       && validation.NormalizedContentType != "application/zip";
-            if (isImage && memStream.TryGetBuffer(out var imgBuf))
-                await thumbnailQueue.EnqueueAsync(result.BlobName, "slikar", imgBuf.ToArray(), ct);
-
-            return Results.Ok(result);
+            return Results.Ok();
         })
-    .DisableAntiforgery()
-    .AddEndpointFilter(async (ctx, next) =>
-    {
-        var sf = ctx.HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>();
-        if (sf is { IsReadOnly: false }) sf.MaxRequestBodySize = null;
-        return await next(ctx);
-    });
+    .DisableAntiforgery();
 
 // ── End Slikar ────────────────────────────────────────────────────────────────
 

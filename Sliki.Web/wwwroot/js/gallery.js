@@ -55,29 +55,64 @@ window.slikiGallery = {
         xhr.send(formData);
     },
 
-    // Parallel-upload variant — passes fileId back in callbacks so multiple
-    // in-flight uploads can be tracked independently.
-    uploadFileParallel(fileId, dotnetRef, endpoint) {
+    // SAS-based direct-to-blob upload:
+    // 1. Reads first 32 bytes for server-side magic-byte validation
+    // 2. POST /slikar/api/sas → gets a SAS URL
+    // 3. PUT directly to Azure Blob Storage (bypasses the app server entirely)
+    // 4. POST /slikar/api/complete so the server can enqueue thumbnail generation
+    async uploadViaSas(fileId, dotnetRef, sasEndpoint, completeEndpoint) {
         const file = this._fileRegistry.get(fileId);
         if (!file) {
             dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', 'File reference lost — please re-select.');
             return;
         }
-        const formData = new FormData();
-        formData.append('file', file, file.name);
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', endpoint);
-        xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, true, xhr.responseText, '');
-            } else {
-                let error = 'Upload failed.';
-                try { error = JSON.parse(xhr.responseText).error || error; } catch {}
+        try {
+            // Read first 32 bytes for server-side magic-byte detection
+            const headerSlice = file.slice(0, 32);
+            const headerBytes = await headerSlice.arrayBuffer();
+            const headerBase64 = btoa(String.fromCharCode(...new Uint8Array(headerBytes)));
+
+            // Request a SAS ticket from our server
+            const sasForm = new FormData();
+            sasForm.append('fileName', file.name);
+            sasForm.append('contentType', file.type || 'application/octet-stream');
+            sasForm.append('size', file.size);
+            sasForm.append('headerBase64', headerBase64);
+
+            const sasResp = await fetch(sasEndpoint, { method: 'POST', body: sasForm });
+            if (!sasResp.ok) {
+                let error = 'Validation failed.';
+                try { error = (await sasResp.json()).error || error; } catch {}
                 dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', error);
+                return;
             }
-        };
-        xhr.onerror = () => dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', 'Network error.');
-        xhr.send(formData);
+            const ticket = await sasResp.json();
+
+            // PUT directly to Azure Blob Storage using the SAS URL
+            const putResp = await fetch(ticket.sasUrl, {
+                method: 'PUT',
+                headers: {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'Content-Type': ticket.contentType
+                },
+                body: file
+            });
+            if (!putResp.ok) {
+                dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', `Blob upload failed: ${putResp.status}`);
+                return;
+            }
+
+            // Notify server so it can set blob metadata and enqueue thumbnail generation
+            const completeForm = new FormData();
+            completeForm.append('blobName', ticket.blobName);
+            completeForm.append('fileName', ticket.fileName);
+            completeForm.append('contentType', ticket.contentType);
+            await fetch(completeEndpoint, { method: 'POST', body: completeForm });
+
+            dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, true, JSON.stringify(ticket), '');
+        } catch (err) {
+            dotnetRef.invokeMethodAsync('OnSlikarDone', fileId, false, '', err?.message || 'Network error.');
+        }
     },
 
     releaseFiles(fileIds) {

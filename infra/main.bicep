@@ -53,6 +53,9 @@ var appInsightsName = '${appBaseName}-${environmentName}-appi'
 var blobContributorRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
   'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+var blobDelegatorRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  'db58b8e5-c6ad-4a2a-8342-4190687cbf4a')
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -73,6 +76,19 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
   name: 'default'
   parent: storageAccount
+  properties: {
+    cors: {
+      corsRules: [
+        {
+          allowedOrigins: ['*']
+          allowedMethods: ['PUT', 'OPTIONS']
+          allowedHeaders: ['*']
+          exposedHeaders: ['*']
+          maxAgeInSeconds: 3600
+        }
+      ]
+    }
+  }
 }
 
 resource imageContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
@@ -171,6 +187,16 @@ resource blobContributorAssignment 'Microsoft.Authorization/roleAssignments@2022
   properties: {
     principalId: webApp.identity.principalId
     roleDefinitionId: blobContributorRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource blobDelegatorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, webApp.id, blobDelegatorRoleId)
+  scope: storageAccount
+  properties: {
+    principalId: webApp.identity.principalId
+    roleDefinitionId: blobDelegatorRoleId
     principalType: 'ServicePrincipal'
   }
 }

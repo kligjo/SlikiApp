@@ -55,7 +55,8 @@
 
 @code {
     private const string FileInputId = "slikar-upload-input";
-    private const string UploadEndpoint = "/slikar/api/upload";
+    private const string SasEndpoint = "/slikar/api/sas";
+    private const string CompleteEndpoint = "/slikar/api/complete";
     private const int Parallelism = 5;
 
     private DotNetObjectReference<SlikarUploader>? _dotNetRef;
@@ -131,7 +132,7 @@
             var tcs = new TaskCompletionSource<(bool, string, string)>();
             _pending[fileId] = tcs;
 
-            await JS.InvokeVoidAsync("slikiGallery.uploadFileParallel", fileId, _dotNetRef, UploadEndpoint);
+            await JS.InvokeVoidAsync("slikiGallery.uploadViaSas", fileId, _dotNetRef, SasEndpoint, CompleteEndpoint);
             var (success, _, _) = await tcs.Task;
 
             if (success) Interlocked.Increment(ref _doneCount);
