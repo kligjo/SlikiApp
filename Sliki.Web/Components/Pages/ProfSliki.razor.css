@@ -1,0 +1,39 @@
+.hero-panel {
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 55%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 1.5rem 3rem rgba(30, 58, 95, 0.18);
+}
+
+.eyebrow {
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.82rem;
+    opacity: 0.82;
+}
+
+.hero-panel h1 {
+    max-width: 52rem;
+    margin-bottom: 1rem;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+}
+
+.hero-copy {
+    max-width: 50rem;
+    margin-bottom: 0;
+    font-size: 1.05rem;
+}
+
+.home-section {
+    margin-top: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 1.25rem;
+}

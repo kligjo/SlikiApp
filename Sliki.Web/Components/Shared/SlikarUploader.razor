@@ -12,13 +12,13 @@
         <div>
             <h2>Прикачи фотографии</h2>
             <p class="section-copy">
-                Фотографии, видеа и ZIP архиви. До 3 000 фајлови одеднаш, прикачување паралелно — 5 истовремено.
+                Фотографии, видеа и ZIP архиви.
             </p>
         </div>
     </div>
 
-    <label class="form-label fw-semibold" for="slikar-upload-input">Изберете фотографии, видеа или ZIP</label>
-    <InputFile id="slikar-upload-input"
+    <label class="form-label fw-semibold" for="@FileInputId">Изберете фотографии, видеа или ZIP</label>
+    <InputFile id="@FileInputId"
                class="form-control"
                multiple
                accept="image/*,video/*,.heic,.heif,.zip"
@@ -54,10 +54,12 @@
 </section>
 
 @code {
-    private const string FileInputId = "slikar-upload-input";
-    private const string SasEndpoint = "/slikar/api/sas";
-    private const string CompleteEndpoint = "/slikar/api/complete";
     private const int Parallelism = 5;
+
+    [Parameter] public string SasEndpoint { get; set; } = "/slikar/api/sas";
+    [Parameter] public string CompleteEndpoint { get; set; } = "/slikar/api/complete";
+
+    private string FileInputId => $"slikar-upload-input-{SasEndpoint.GetHashCode():x8}";
 
     private DotNetObjectReference<SlikarUploader>? _dotNetRef;
     private readonly List<string> _fileIds = [];

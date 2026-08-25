@@ -40,6 +40,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<ImageFileValidator>();
 builder.Services.AddSingleton<IImageStorageService, AzureBlobImageStorageService>();
 builder.Services.AddSingleton<ISlikarStorageService, SlikarStorageService>();
+builder.Services.AddSingleton<IProfStorageService, ProfStorageService>();
 builder.Services.AddSingleton<ThumbnailService>();
 builder.Services.AddSingleton<ThumbnailQueue>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ThumbnailQueue>());
@@ -267,6 +268,135 @@ app.MapPost(
     .DisableAntiforgery();
 
 // ── End Slikar ────────────────────────────────────────────────────────────────
+
+// ── Profesionalni Sliki endpoints ─────────────────────────────────────────────
+
+app.MapGet(
+    "/prof/images/{blobName}",
+    async Task<IResult> (string blobName, IProfStorageService storage, CancellationToken ct) =>
+    {
+        var image = await storage.OpenReadAsync(blobName, ct);
+        return image is null
+            ? Results.NotFound()
+            : Results.File(image.Content, image.ContentType,
+                lastModified: image.LastModified,
+                entityTag: EntityTagHeaderValue.Parse(image.ETag),
+                enableRangeProcessing: true);
+    });
+
+app.MapGet(
+    "/prof/thumbs/{blobName}",
+    async Task<IResult> (
+        string blobName,
+        ThumbnailService thumbnailService,
+        IProfStorageService storage,
+        CancellationToken ct) =>
+    {
+        if (string.IsNullOrWhiteSpace(blobName) || blobName != Path.GetFileName(blobName))
+            return Results.BadRequest();
+
+        if (!thumbnailService.Exists(blobName, "prof"))
+        {
+            var download = await storage.OpenReadAsync(blobName, ct);
+            if (download is null) return Results.NotFound();
+
+            if (download.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                || download.ContentType == "application/zip")
+            {
+                await download.Content.DisposeAsync();
+                return Results.NotFound();
+            }
+
+            await using var ms = new MemoryStream();
+            await download.Content.CopyToAsync(ms, ct);
+            await download.Content.DisposeAsync();
+
+            var ok = await thumbnailService.GenerateAsync(ms, blobName, "prof", ct);
+            if (!ok)
+            {
+                ms.Position = 0;
+                return Results.File(ms, "image/jpeg");
+            }
+        }
+
+        var thumbPath = thumbnailService.ThumbPath(blobName, "prof");
+        return Results.File(thumbPath, "image/jpeg",
+            lastModified: File.GetLastWriteTimeUtc(thumbPath),
+            entityTag: new EntityTagHeaderValue($"\"{("prof/" + blobName).GetHashCode():x8}\""));
+    });
+
+app.MapPost(
+        "/prof/api/sas",
+        async Task<IResult> (
+            HttpRequest request,
+            IProfStorageService storage,
+            ImageFileValidator imageFileValidator,
+            CancellationToken ct) =>
+        {
+            var form = await request.ReadFormAsync(ct);
+            var fileName = form["fileName"].ToString();
+            var contentType = form["contentType"].ToString();
+            if (!long.TryParse(form["size"], out var size))
+                return Results.BadRequest(new { error = "size is required." });
+
+            var headerBase64 = form["headerBase64"].ToString();
+            if (string.IsNullOrWhiteSpace(headerBase64))
+                return Results.BadRequest(new { error = "headerBase64 is required." });
+            byte[] header;
+            try { header = Convert.FromBase64String(headerBase64); }
+            catch { return Results.BadRequest(new { error = "Invalid headerBase64." }); }
+
+            if (size > imageFileValidator.MaxUploadBytes)
+                return Results.BadRequest(new { error = $"Exceeds the {FileSizeFormatter.Format(imageFileValidator.MaxUploadBytes)} limit." });
+
+            var validation = imageFileValidator.Validate(fileName, contentType, size, header);
+            if (!validation.IsValid || string.IsNullOrWhiteSpace(validation.NormalizedContentType))
+                return Results.BadRequest(new { error = validation.ErrorMessage ?? "Validation failed." });
+
+            var ticket = await storage.GenerateSasUploadUrlAsync(fileName, validation.NormalizedContentType, ct);
+            return Results.Ok(ticket);
+        })
+    .DisableAntiforgery();
+
+app.MapPost(
+        "/prof/api/complete",
+        async Task<IResult> (
+            HttpRequest request,
+            IProfStorageService storage,
+            ThumbnailQueue thumbnailQueue,
+            CancellationToken ct) =>
+        {
+            var form = await request.ReadFormAsync(ct);
+            var blobName = form["blobName"].ToString();
+            var fileName = form["fileName"].ToString();
+            var contentType = form["contentType"].ToString();
+
+            if (string.IsNullOrWhiteSpace(blobName) || blobName != Path.GetFileName(blobName))
+                return Results.BadRequest(new { error = "Invalid blobName." });
+
+            if (!string.IsNullOrWhiteSpace(fileName))
+                await storage.SetBlobOriginalFileNameAsync(blobName, fileName, ct);
+
+            var isImage = !contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                       && contentType != "application/zip";
+            if (isImage)
+            {
+                var download = await storage.OpenReadAsync(blobName, ct);
+                if (download is not null)
+                {
+                    await using var ms = new MemoryStream();
+                    await download.Content.CopyToAsync(ms, ct);
+                    await download.Content.DisposeAsync();
+                    if (ms.TryGetBuffer(out var buf))
+                        await thumbnailQueue.EnqueueAsync(blobName, "prof", buf.ToArray(), ct);
+                }
+            }
+
+            return Results.Ok();
+        })
+    .DisableAntiforgery();
+
+// ── End Profesionalni Sliki ───────────────────────────────────────────────────
 
 app.MapPost(
         "/api/images/upload",

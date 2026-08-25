@@ -21,6 +21,11 @@
     min-width: 7rem;
 }
 
+.gallery-bar-media-filter {
+    display: flex;
+    gap: 0.25rem;
+}
+
 /* ── Grid ────────────────────────────────────────────────── */
 .photo-grid {
     display: grid;

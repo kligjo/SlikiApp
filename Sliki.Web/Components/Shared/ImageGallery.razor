@@ -16,6 +16,14 @@
         <button type="button" class="btn btn-sm btn-primary" @onclick="ApplyFiltersAsync">Apply</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ResetFiltersAsync">Reset</button>
     </div>
+    <div class="gallery-bar-media-filter">
+        <button type="button" class="btn btn-sm @(_mediaFilter == MediaFilter.All ? "btn-secondary" : "btn-outline-secondary")"
+                @onclick="() => SetMediaFilter(MediaFilter.All)">Сите</button>
+        <button type="button" class="btn btn-sm @(_mediaFilter == MediaFilter.Photos ? "btn-secondary" : "btn-outline-secondary")"
+                @onclick="() => SetMediaFilter(MediaFilter.Photos)">Слики</button>
+        <button type="button" class="btn btn-sm @(_mediaFilter == MediaFilter.Videos ? "btn-secondary" : "btn-outline-secondary")"
+                @onclick="() => SetMediaFilter(MediaFilter.Videos)">Видеа</button>
+    </div>
     @if (_allImages.Count > 0)
     {
         <button type="button" class="btn btn-sm @(SelectMode ? "btn-primary" : "btn-outline-secondary")"
@@ -40,7 +48,7 @@ else if (_allImages.Count == 0)
 else
 {
     <div class="photo-grid" aria-live="polite">
-        @foreach (var image in _allImages.Take(_visibleCount))
+        @foreach (var image in FilteredImages.Take(_visibleCount))
         {
             var isSelected = SelectedBlobNames.Contains(image.BlobName);
             <button type="button"
@@ -115,9 +123,9 @@ else
             <div class="lightbox-nav">
                 <button type="button" class="lightbox-nav-btn" @onclick="PrevImage"
                         disabled="@(LightboxIndex <= 0)">❮</button>
-                <span class="lightbox-counter">@(LightboxIndex + 1) / @_allImages.Count</span>
+                <span class="lightbox-counter">@(LightboxIndex + 1) / @FilteredImages.Count</span>
                 <button type="button" class="lightbox-nav-btn" @onclick="NextImage"
-                        disabled="@(LightboxIndex >= _allImages.Count - 1)">❯</button>
+                        disabled="@(LightboxIndex >= FilteredImages.Count - 1)">❯</button>
             </div>
         </div>
     </div>
@@ -130,9 +138,18 @@ else
 
     private IImageStorageService ImageStorageService => StorageOverride ?? _defaultStorage;
 
+    private enum MediaFilter { All, Photos, Videos }
+
     private const int BatchSize = 100;
 
     private List<GalleryImageItem> _allImages = [];
+    private MediaFilter _mediaFilter = MediaFilter.All;
+    private List<GalleryImageItem> FilteredImages => _mediaFilter switch
+    {
+        MediaFilter.Photos => _allImages.Where(i => !i.ContentType.StartsWith("video/")).ToList(),
+        MediaFilter.Videos => _allImages.Where(i => i.ContentType.StartsWith("video/")).ToList(),
+        _ => _allImages
+    };
     private int _visibleCount = BatchSize;
     private bool _initialLoading = true;
     private bool _isLoading;
@@ -219,9 +236,17 @@ else
         if (!SelectMode) SelectedBlobNames.Clear();
     }
 
+    private void SetMediaFilter(MediaFilter filter)
+    {
+        _mediaFilter = filter;
+        _visibleCount = BatchSize;
+        LightboxImage = null;
+    }
+
     private void OpenLightbox(GalleryImageItem image)
     {
-        LightboxIndex = _allImages.IndexOf(image);
+        var filtered = FilteredImages;
+        LightboxIndex = filtered.IndexOf(image);
         LightboxImage = image;
     }
 
@@ -231,24 +256,22 @@ else
     {
         if (LightboxIndex <= 0) return;
         LightboxIndex--;
-        LightboxImage = _allImages[LightboxIndex];
+        LightboxImage = FilteredImages[LightboxIndex];
     }
 
     private void NextImage()
     {
-        if (LightboxIndex >= _allImages.Count - 1) return;
+        var filtered = FilteredImages;
+        if (LightboxIndex >= filtered.Count - 1) return;
         LightboxIndex++;
-        LightboxImage = _allImages[LightboxIndex];
-        // Reveal more tiles if lightboxing past the visible window
+        LightboxImage = filtered[LightboxIndex];
         if (LightboxIndex >= _visibleCount)
-        {
-            _visibleCount = Math.Min(LightboxIndex + BatchSize, _allImages.Count);
-        }
+            _visibleCount = Math.Min(LightboxIndex + BatchSize, filtered.Count);
     }
 
     private async Task DownloadSelectedAsync()
     {
-        var toDownload = _allImages
+        var toDownload = FilteredImages
             .Where(i => SelectedBlobNames.Contains(i.BlobName))
             .Select(i => new { url = GetImageUrl(i.BlobName), name = i.FileName })
             .ToList();

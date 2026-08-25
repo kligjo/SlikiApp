@@ -1,0 +1,27 @@
+@page "/prof"
+@rendermode InteractiveServer
+
+@using Sliki.Web.Components.Shared
+@using Sliki.Web.Services
+
+@inject IProfStorageService ProfStorage
+
+<PageTitle>Професионални слики</PageTitle>
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Професионални слики</p>
+    </div>
+</section>
+
+<section class="home-section" id="upload">
+    <h2 class="section-title">Прикачи фотографии</h2>
+    <SlikarUploader SasEndpoint="/prof/api/sas" CompleteEndpoint="/prof/api/complete" />
+</section>
+
+<section class="home-section" id="gallery">
+    <h2 class="section-title">Галерија</h2>
+    <ImageGallery StorageOverride="ProfStorage"
+                  ImageUrlBase="/prof/images"
+                  ThumbUrlBase="/prof/thumbs" />
+</section>
